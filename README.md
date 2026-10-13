@@ -40,18 +40,35 @@ One request to the model answers all of these at once:
 | Which area of the project is it (from the repo's own `area:*` labels)? | choice |
 | Fast-track, needs review, needs changes, or spam? | choice |
 
-Counting is done in code, not by the model: account age when the PR was opened, how many PRs the
-author opened across GitHub in the previous 24 hours, diff size, whitespace-only and docs-only
-changes, and whether the diff adds the author's own username.
+When the verdict is spam, a second small read names the kind, like CodeRabbit's categories:
+contributor-gaming, self-promotion, AI slop or low effort. (It is a separate read on purpose: OpenJev
+reads a request's questions on one canvas, and an extra choice there shifted the other answers.)
+
+Facts are computed in code, not guessed by the model:
+
+- account age when the PR was opened, and how many PRs the author opened across GitHub in the 24 hours before
+- **swarms**: near-identical PRs other people opened in this repo in the 48 hours before, and other
+  people's PRs that already reference the same issue
+- whether the description is the repo's PR template left unfilled, and whether the diff adds the author's own username
+- diff size, whitespace-only and docs-only changes
+
+And the input is cleaned first: summaries that review bots (such as CodeRabbit) edit into the
+description, and HTML comments copied from the repo's own PR template, are removed, because the
+contributor did not write them.
+
+**Trusted authors.** Like CodeRabbit's slop detection and anti-slop, SlopGate does not accuse the
+repo's owners, members, collaborators or past contributors of spam. Their PRs still get every other
+check, including prompt injection and risky files. Set `SLOPGATE_JUDGE_ALL_AUTHORS=1` to judge
+everyone (CodeRabbit's `include_all_authors`).
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    A[PR opened] --> B[Facts computed in code<br/>+ CONTRIBUTING rules]
-    B --> C[System One: OpenJev<br/>all questions, one read, ~100 ms]
+    A[PR opened] --> B[Facts computed in code<br/>swarms, rules, clean input]
+    B --> C[System One: OpenJev<br/>all questions, one read, ~200 ms]
     C -->|confident| D[Label + scorecard comment]
-    C -->|unsure| E[System Two: open-weight LLM<br/>on DigitalOcean Gradient]
+    C -->|unsure| E[System Two: open-weight chat LLM<br/>DO Gradient or Codiv]
     E --> D
 ```
 
@@ -60,47 +77,97 @@ slow, expensive model only runs when the fast one's own probabilities say it is 
 
 ## Results on real pull requests
 
-### v1: rules written before we saw any data
+We test every judge on PRs that real maintainers labelled `spam`, against PRs merged in the same
+repositories. Then we fixed what the misses taught us, and checked the fixes on PRs the system had
+never seen.
 
-**101 real pull requests from 29 repositories**: 60 that maintainers labelled `spam`, and 41 merged PRs from the same repositories.
+### Main set: 101 PRs from 29 repositories, including Godot, scikit-learn and Scrapy
+
+**Outside contributors: 34 real pull requests from 15 repositories**, 33 that maintainers labelled `spam` and 1 merged PRs from the same repositories.
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · OpenJev | System One | 101/101 | 22% | 87% | 3% | 5% | 1.1 s | 293 ms | 1972 |
-| SlopGate · Clef-flash | System One | 101/101 | 23% | 93% | 22% | 2% | 989 ms | 135 ms | 2484 |
-| DiffusionGemma 26B as chat | Chat LLM | 100/101 | 23% | 93% | 23% | 2% | 1.3 s | 442 ms | 1732 |
+| SlopGate · OpenJev | System One | 34/34 | 52% | 100% | 3% | 0% | 1.8 s | 238 ms | 1817 |
+| SlopGate · Clef-flash | System One | 34/34 | 30% | 100% | 18% | 0% | 1.2 s | 136 ms | 2302 |
+| DiffusionGemma 26B as chat | Chat LLM | 34/34 | 36% | 100% | 27% | 0% | 1.2 s | 343 ms | 1571 |
+| CodeRabbit | Observed | 1/34 | 100% | 100% | - | - | 6.7 min | - | - |
+
+**Everyone: 101 real pull requests from 29 repositories**, 60 that maintainers labelled `spam` and 41 merged PRs from the same repositories.
+
+| Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
+|---|---|---|---|---|---|---|---|---|---|
+| SlopGate · OpenJev | System One | 101/101 | 28% | 100% | 3% | 0% | 1.2 s | 214 ms | 1937 |
+| SlopGate · Clef-flash | System One | 101/101 | 17% | 100% | 15% | 0% | 1.1 s | 127 ms | 2435 |
+| DiffusionGemma 26B as chat | Chat LLM | 98/101 | 22% | 93% | 29% | 2% | 1.2 s | 342 ms | 1683 |
 | CodeRabbit | Observed | 2/101 | 100% | 100% | - | 0% | 3.7 min | - | - |
 
-How well each judge's own spam probability separates spam from merged PRs (ROC AUC, 0.5 is a coin
-flip): **OpenJev 0.79**, Clef-flash 0.76, DiffusionGemma as a chat model 0.69. The typed
-probabilities of a System One read rank PRs better than a chat model's self-reported confidence,
-from the same family of weights.
+How SlopGate (OpenJev) got here, on the same 101 PRs:
 
-**What the misses taught us.** Much of what maintainers label spam in 2026 does not look like spam
-on its own. scrapy received [#8307](https://github.com/scrapy/scrapy/pull/8307),
-[#8308](https://github.com/scrapy/scrapy/pull/8308) and [#8309](https://github.com/scrapy/scrapy/pull/8309)
-within hours: three different accounts "fixing" the same bug, each with tests, all labelled spam.
-No judge that looks at one PR at a time can see that. So v2 adds **swarm detection**: SlopGate now
-counts the near-identical PRs other people opened in the 48 hours before this one, and the PRs that
-already reference the same issue. Only earlier PRs count, because that is all a gate sees when a PR
-arrives.
+| Version | What changed | Spam caught | Precision | False alarms on merged PRs |
+|---|---|---|---|---|
+| v1 | Rules written before we saw any data | 22% | 87% | 5% |
+| v2 | + swarm detection | 25% | 83% | 7% |
+| v3 | + CodeRabbit's trusted-author rule, bot text and template comments stripped, unfilled-template fact | **28%** | **100%** | **0%** |
 
-### v2: with swarm detection
+- **Every v2 false alarm was a PR by the repo's owner or a collaborator.** CodeRabbit and anti-slop
+  never judge those authors for spam, and adopting the same rule removed all of them.
+- **Much of today's spam does not look like spam.** scrapy received
+  [#8307](https://github.com/scrapy/scrapy/pull/8307), [#8308](https://github.com/scrapy/scrapy/pull/8308)
+  and [#8309](https://github.com/scrapy/scrapy/pull/8309) within hours: three accounts "fixing" the
+  same bug, each with tests, all labelled spam. No judge that looks at one PR at a time can see that,
+  which is why SlopGate now detects swarms.
+- **Review bots write into PR descriptions.** In 34 of the 74 held-out PRs, CodeRabbit had edited its
+  own summary into the description. Left in, a judge reads a bot's words as the contributor's.
+- **A chat model ranks about as well when given the same facts** (ROC AUC of its stated spam
+  probability: 0.82, versus 0.80 for OpenJev's), but returns one self-reported number and sometimes
+  no parseable answer. SlopGate returns nine calibrated signals in one read that cannot go off-schema.
+- The 24 "spam" PRs opened by repo owners are almost all forks of OWASP Juice Shop, where upstream's
+  labelling automation marks the owner's own PRs. That is why the outside-contributor view is the headline.
 
-V2_RESULTS
+### Held out: 74 PRs CodeRabbit reviewed, never used to build SlopGate
 
-How the test works (code in [`eval/`](eval)):
+**Outside contributors: 25 real pull requests from 14 repositories**, 23 that maintainers labelled `spam` and 2 merged PRs from the same repositories.
+
+| Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
+|---|---|---|---|---|---|---|---|---|---|
+| SlopGate · OpenJev | System One | 25/25 | 39% | 90% | 0% | 50% | 1.2 s | 259 ms | 1617 |
+| SlopGate · Clef-flash | System One | 25/25 | 17% | 80% | 17% | 50% | 897 ms | 107 ms | 2178 |
+| DiffusionGemma 26B as chat | Chat LLM | 24/25 | 18% | 100% | 5% | 0% | 1.1 s | 366 ms | 1370 |
+| CodeRabbit | Observed | 17/25 | 7% | 100% | - | 0% | 2.1 min | - | - |
+
+**Everyone: 74 real pull requests from 23 repositories**, 40 that maintainers labelled `spam` and 34 merged PRs from the same repositories.
+
+| Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
+|---|---|---|---|---|---|---|---|---|---|
+| SlopGate · OpenJev | System One | 74/74 | 22% | 90% | 2% | 3% | 1.1 s | 314 ms | 1979 |
+| SlopGate · Clef-flash | System One | 74/74 | 10% | 80% | 30% | 3% | 899 ms | 134 ms | 2496 |
+| DiffusionGemma 26B as chat | Chat LLM | 73/74 | 26% | 100% | 23% | 0% | 1.2 s | 387 ms | 1740 |
+| CodeRabbit | Observed | 58/74 | 3% | 100% | - | 0% | 75.5 s | - | - |
+
+On PRs it had never seen, SlopGate (OpenJev) caught **7× more spam than CodeRabbit** (22% vs 3%;
+39% vs 7% among outside contributors), answered in about a second instead of a minute or more, and
+waved only **1 of 40 spam PRs** through to fast-track. A chat model given SlopGate's facts caught a
+little more spam with no false alarms, but fast-tracked **23%** of the spam, the one mistake a gate
+must not make. SlopGate's one false alarm,
+[PYSCHECARE#445](https://github.com/Shaurya1907/PYSCHECARE-main/pull/445), is a 3-line "code quality"
+change whose entire description was written by CodeRabbit; it was merged.
+
+### How the test works
+
+Code is in [`eval/`](eval).
 
 - **Spam PRs** are real PRs that their maintainers labelled `spam` since January 2025.
   **Merged PRs** come from the *same repositories*, so a judge cannot score well just by telling
   documentation repos from code repos.
 - Bots and deleted accounts are excluded (a deleted account would leak the answer).
-- SlopGate's questions and verdict rules were written **before** this dataset was collected.
-- **CodeRabbit** is a closed service with no API, so we read what it actually posted on each PR.
-  It only has an opinion where a repo installed it.
+- **CodeRabbit** is a closed service with no API, so we read what it actually posted on each PR,
+  including its "flagged as potential spam" warning.
 - **anti-slop** (the most popular open-source slop filter, 34 rules) runs unmodified behind a
-  read-only proxy: it can read GitHub but every write it attempts (label, comment, close) is blocked.
-- The exact PR list is in [`eval/results/prs.urls.tsv`](eval/results/prs.urls.tsv); rebuild it with
+  read-only proxy: it can read GitHub, but every write it attempts (label, comment, close) is blocked.
+  Runs that hit GitHub rate limits are excluded rather than scored.
+- Times are measured from a laptop in India, so they include the round trip to the US. "Model time"
+  is the model's own time, as reported by the server.
+- The exact PR lists are in [`eval/results/`](eval/results) (`*.urls.tsv`); rebuild a set with
   `uv run python eval/collect.py --urls eval/results/prs.urls.tsv`.
 
 ## Use it
