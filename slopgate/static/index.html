@@ -712,14 +712,16 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this.tick = setInterval(()=>this.setState({now:Date.now()}), 100);
-    this.poll = setInterval(()=>this.load(), 2500);
+    this.poll = setInterval(()=>this.load(), 15000);
+    this.live = new EventSource('/api/events');  // instant updates as the gate finishes each PR
+    this.live.addEventListener('stage', e => { const d = JSON.parse(e.data); if (d.stage === 'done' || d.stage === 'failed') this.load(); });
     this.load();
     fetch('/api/dashboard').then(r=>r.json()).then(dash=>this.setState({dash})).catch(()=>{});
     this.onKey = e => { if (e.key==='Escape' && this.state.max) this.setState({max:null}); };
     window.addEventListener('keydown', this.onKey);
     if (this.state.page === 'arena') this.run(PRESETS.find(p=>p.id===this.state.sel).url);
   }
-  componentWillUnmount() { clearInterval(this.tick); clearInterval(this.poll); if (this.es) this.es.close(); window.removeEventListener('keydown', this.onKey); }
+  componentWillUnmount() { clearInterval(this.tick); clearInterval(this.poll); if (this.live) this.live.close(); if (this.es) this.es.close(); window.removeEventListener('keydown', this.onKey); }
   load() {
     fetch('/feed').then(r=>r.json()).then(feed=>this.setState({feed})).catch(()=>{});
     fetch('/api/status').then(r=>r.json()).then(status=>this.setState({status})).catch(()=>{});
@@ -737,13 +739,13 @@ class Component extends DCLogic {
     es.addEventListener('done', () => { upd(()=>({running:false})); es.close(); });
     es.onerror = () => { upd(()=>({running:false})); es.close(); };
   }
-  go(page) { try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page}); if (page === 'arena' && !this.state.arena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
+  go(page) { if (page === 'sim') { window.location.href = '/sim'; return; } try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page}); if (page === 'arena' && !this.state.arena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
 
   renderVals() {
     const s = this.state, now = s.now, D = s.dash, st = s.status || {};
     const ago = ts => { const d = Math.max(0, Math.round(now/1000 - ts)); return d<5 ? 'just now' : d<60 ? d+'s ago' : d<3600 ? Math.round(d/60)+'m ago' : Math.round(d/3600)+'h ago'; };
     const nav = [
-      {label:'Gate',items:[{id:'gate',label:'Live gate',count:s.feed.filter(f=>now/1000-f.at<60).length||null},{id:'arena',label:'Arena'}]},
+      {label:'Gate',items:[{id:'gate',label:'Live gate',count:s.feed.filter(f=>now/1000-f.at<60).length||null},{id:'sim',label:'3D pipeline'},{id:'arena',label:'Arena'}]},
       {label:'Proof',items:[{id:'proof',label:'Scoreboard'}]},
       {label:'System',items:[{id:'ops',label:'Threats, cost & stack'}]}
     ].map(g=>({...g,items:g.items.map(it=>{const a=it.id===s.page;return {...it,bg:a?'rgba(255,255,255,.08)':'transparent',color:a?'#fff':'#C9D1CB',weight:a?600:500,bar:a?'#9CD3AE':'transparent'};})}));

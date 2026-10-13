@@ -15,6 +15,7 @@
    the demo PRs come from an outside contributor, not the repo owner. They clone this repo and keep a
    terminal ready at its root.
 4. Click each arena preset once to warm the connections.
+5. Optional: in a spare terminal, `uv run python demo/watch.py` shows the same events as text.
 5. Keep the backup: a screen recording of steps 2 and 3 below, in case the venue Wi-Fi drops.
 
 ## The pitch
@@ -25,7 +26,7 @@ GitHub is weighing a switch that lets maintainers turn pull requests off entirel
 everyone is the wrong fix. SlopGate keeps it open: an open-weight gatekeeper that reads every PR in
 about a tenth of a second."
 
-**2. Live gate (45 s).** The teammate runs:
+**2. Live gate (45 s).** Put the 3D pipeline (`/sim`) on the big screen. The teammate runs:
 ```bash
 demo/open-pr.sh spam
 ```

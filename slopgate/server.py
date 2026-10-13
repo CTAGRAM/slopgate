@@ -5,6 +5,7 @@ import hmac
 import json
 import logging
 import os
+import queue
 import statistics
 import time
 from collections import deque
@@ -17,7 +18,8 @@ from pathlib import Path
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 
-from . import config
+from . import config, report
+from .events import Bus
 from .arena import FINAL, contenders, final_opinion, run_safely
 from .escalate import system_two
 from .judge import build_state, fact_values, facts, is_trusted
@@ -31,6 +33,7 @@ TRIGGERS = {"opened", "reopened", "edited", "synchronize", "ready_for_review"}
 STATIC = Path(__file__).parent / "static"
 RESULTS = Path(__file__).resolve().parents[1] / "eval" / "results"
 FEED: deque[dict] = deque(maxlen=30)  # the latest triages, newest first
+BUS = Bus()  # every stage of every PR, for the live views
 TOTALS = {"triaged": 0, "spam": 0, "injections": 0, "started": time.time()}
 DEMO_PRS = cycle(f"https://github.com/CTAGRAM/slopgate-demo/pull/{n}" for n in (2, 4, 3, 5, 6))
 
@@ -80,6 +83,31 @@ def feed():
     return list(FEED)
 
 
+@app.get("/sim")
+def sim():
+    return FileResponse(STATIC / "sim.html")
+
+
+@app.get("/api/events")
+def events():
+    """Every stage of every PR, live: the 3D pipeline, the dashboard and demo/watch.py listen here."""
+    q, backlog = BUS.subscribe()
+
+    def stream():
+        try:
+            yield _sse("hello", {"backlog": backlog, "now": time.time()})
+            while True:
+                try:
+                    yield _sse("stage", q.get(timeout=15))
+                except queue.Empty:
+                    yield ": keep-alive\n\n"
+        finally:
+            BUS.unsubscribe(q)
+
+    return StreamingResponse(stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @app.get("/triage")
 def triage(url: str):
     pr, t = gate.triage(url)
@@ -96,9 +124,17 @@ def _record(item: dict) -> None:
 @app.post("/api/replay")
 def replay():
     """'Simulate PR': run a real demo PR through the gate again. Read-only: nothing is labelled."""
-    pr, t = gate.triage(next(DEMO_PRS))
+    url = next(DEMO_PRS)
+    emit = BUS.emitter(url, "replay")
+    emit("received")
+    try:
+        pr, t = gate.triage(url, emit=emit)
+    except Exception as e:
+        emit("failed", error=str(e)[:300])
+        raise
     item = summary(pr, t) | {"replay": True}
     _record(item)
+    emit("done", item=item, labels=[], applied=False)
     return item
 
 
@@ -141,13 +177,17 @@ def arena_stream(url: str):
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-def _triage_and_apply(url: str) -> None:
+def _triage_and_apply(url: str, emit) -> None:
     try:
-        pr, t = gate.triage(url)
+        pr, t = gate.triage(url, emit=emit)
+        emit("applying")
         gate.apply(pr, t)
-        _record(summary(pr, t))
+        item = summary(pr, t)
+        _record(item)
+        emit("done", item=item, labels=[name for name, _, _ in report.labels(t)] + ([t.area] if t.area else []), applied=True)
         log.info("triaged %s -> %s (%.0f%%)", url, t.verdict, t.confidence * 100)
-    except Exception:
+    except Exception as e:
+        emit("failed", error=str(e)[:300])
         log.exception("triage failed for %s", url)
 
 
@@ -169,5 +209,8 @@ async def webhook(
     if payload.get("action") not in TRIGGERS:
         return {"ignored": payload.get("action")}
     url = payload["pull_request"]["html_url"]
-    tasks.add_task(_triage_and_apply, url)  # answer GitHub fast; the read happens right after
+    emit = BUS.emitter(url, "webhook")
+    emit("received", action=payload.get("action"), title=payload["pull_request"].get("title"),
+         author=payload["pull_request"].get("user", {}).get("login"))
+    tasks.add_task(_triage_and_apply, url, emit)  # answer GitHub fast; the read happens right after
     return {"queued": url}

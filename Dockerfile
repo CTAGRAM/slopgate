@@ -16,4 +16,5 @@ RUN uv sync --frozen --no-dev
 COPY eval/results ./eval/results
 
 EXPOSE 8080
-CMD ["uv", "run", "--no-sync", "uvicorn", "slopgate.server:app", "--host", "0.0.0.0", "--port", "8080"]
+# Run the venv directly: hosts like Hugging Face Spaces start the container as an unprivileged user
+CMD ["/app/.venv/bin/uvicorn", "slopgate.server:app", "--host", "0.0.0.0", "--port", "8080"]

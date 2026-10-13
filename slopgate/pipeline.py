@@ -6,7 +6,8 @@ from . import antislop, report
 from .config import Settings
 from .escalate import second_opinion
 from .github import GitHub, PullRequest
-from .judge import Triage, apply_rules, classify_spam, is_trusted, judge
+from .events import Emit, quiet
+from .judge import Triage, apply_rules, classify_spam, fact_values, is_trusted, judge
 from .openjev import OpenJev
 
 
@@ -18,18 +19,40 @@ class SlopGate:
         self.rules = antislop.AntiSlop(settings.github_token) if antislop.available() else None
         self._pool = ThreadPoolExecutor(4)
 
-    def triage(self, url: str, escalate: bool = True) -> tuple[PullRequest, Triage]:
+    def triage(self, url: str, escalate: bool = True, emit: Emit = quiet) -> tuple[PullRequest, Triage]:
+        emit("fetching")
         pr = self.github.pull_request(url)
+        trusted = is_trusted(pr, self.settings.judge_all_authors)
+        emit("facts", title=pr.title, author=pr.author, repo=f"{pr.owner}/{pr.repo}", number=pr.number,
+             association=pr.author_association, trusted=trusted, info=fact_values(pr))
+
+        def run_rules() -> dict:
+            r = self.rules.check(pr)
+            emit("rules_done", **{k: r[k] for k in ("failed", "total", "checks", "seconds", "error", "result")})
+            return r
+
         # anti-slop's rules run alongside the model read, so they add little to the wait
-        rules = self._pool.submit(self.rules.check, pr) if self.rules else None
+        rules = None
+        if self.rules:
+            emit("rules_start")
+            rules = self._pool.submit(run_rules)
+        emit("read_start", model=self.model.model)
         state, t = judge(pr, self.model, self.settings.judge_all_authors)
+        r = t.reading
+        emit("read_done", verdict=t.verdict, confidence=t.confidence, probabilities=t.probabilities,
+             flags=list(t.flags), server_ms=r.server_ms, wall_ms=r.wall_ms, tokens=r.input_tokens, questions=len(r.answers))
         try:
             checked = rules.result(timeout=120) if rules else None
-        except Exception:  # noqa: BLE001 - without the rules, the read alone decides
+        except Exception as e:  # noqa: BLE001 - without the rules, the read alone decides
             checked = None
-        t = classify_spam(apply_rules(t, checked, is_trusted(pr, self.settings.judge_all_authors)), state, self.model)
+            emit("rules_done", error=str(e)[:200])
+        t = classify_spam(apply_rules(t, checked, trusted), state, self.model)
+        emit("fused", verdict=t.verdict, flags=list(t.flags), spam_type=t.spam_type, uncertain=t.uncertain,
+             confidence=t.confidence, notes=list(t.notes))
         if escalate and t.uncertain:
+            emit("escalated")
             t = second_opinion(self.settings, state, t)
+            emit("second_opinion", verdict=t.verdict, text=(t.second_opinion or "")[:400])
         return pr, t
 
     def apply(self, pr: PullRequest, t: Triage) -> None:

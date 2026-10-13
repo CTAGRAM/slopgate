@@ -2,6 +2,7 @@
 
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -119,32 +120,38 @@ class GitHub:
                     break
         return self._contributing[key]
 
-    def swarm(self, pr: "PullRequest", hours: int = 48) -> None:
-        """Fill in how many other people recently opened near-identical PRs, or PRs for the same issue.
-        Only PRs opened before this one count: that is all a gate would see when this one arrives."""
+    def similar_recent(self, owner: str, repo: str, number: int, author: str, title: str,
+                       created: datetime, hours: int = 48) -> tuple[int, int]:
+        """Near-identical PRs by other people in the hours before this one: (PRs, authors).
+        Only earlier PRs count: that is all a gate would see when this one arrives."""
         fmt = "%Y-%m-%dT%H:%M:%SZ"
-        start = (pr.created_at - timedelta(hours=hours)).strftime(fmt)
-        end = pr.created_at.strftime(fmt)
+        start, end = (created - timedelta(hours=hours)).strftime(fmt), created.strftime(fmt)
         try:
-            items = self._get("/search/issues", q=f"repo:{pr.owner}/{pr.repo} is:pr created:{start}..{end}", per_page=100)["items"]
+            items = self._get("/search/issues", q=f"repo:{owner}/{repo} is:pr created:{start}..{end}", per_page=100)["items"]
         except httpx.HTTPStatusError:
             items = []
-        mine = _words(pr.title)
-        similar = [i for i in items if i["number"] != pr.number and i["user"]["login"] != pr.author
+        mine = _words(title)
+        similar = [i for i in items if i["number"] != number and i["user"]["login"] != author
                    and _jaccard(mine, _words(i["title"])) >= 0.4]
-        pr.similar_recent = len(similar)
-        pr.similar_authors = len({i["user"]["login"] for i in similar})
-        if pr.linked_issue:
-            try:
-                events = self._get(f"/repos/{pr.owner}/{pr.repo}/issues/{pr.linked_issue['number']}/timeline", per_page=100)
-            except httpx.HTTPStatusError:
-                events = []
-            others = {e["source"]["issue"]["number"] for e in events
-                      if e.get("event") == "cross-referenced" and "pull_request" in e.get("source", {}).get("issue", {})
-                      and e["source"]["issue"]["number"] != pr.number
-                      and _ts(e["created_at"]) <= pr.created_at
-                      and e["source"]["issue"]["user"]["login"] != pr.author}
-            pr.same_issue_prs = len(others)
+        return len(similar), len({i["user"]["login"] for i in similar})
+
+    def same_issue(self, owner: str, repo: str, issue: int, number: int, author: str, created: datetime) -> int:
+        """Other people's PRs that already referenced the same issue when this one arrived."""
+        try:
+            events = self._get(f"/repos/{owner}/{repo}/issues/{issue}/timeline", per_page=100)
+        except httpx.HTTPStatusError:
+            return 0
+        return len({e["source"]["issue"]["number"] for e in events
+                    if e.get("event") == "cross-referenced" and "pull_request" in e.get("source", {}).get("issue", {})
+                    and e["source"]["issue"]["number"] != number and _ts(e["created_at"]) <= created
+                    and e["source"]["issue"]["user"]["login"] != author})
+
+    def swarm(self, pr: "PullRequest") -> None:
+        """Fill in the swarm facts for a PR loaded without them (evaluation snapshots)."""
+        pr.similar_recent, pr.similar_authors = self.similar_recent(
+            pr.owner, pr.repo, pr.number, pr.author, pr.title, pr.created_at)
+        pr.same_issue_prs = self.same_issue(pr.owner, pr.repo, pr.linked_issue["number"], pr.number, pr.author,
+                                            pr.created_at) if pr.linked_issue else None
 
     def prs_in_window(self, author: str, end: datetime, hours: int = 24) -> int | None:
         """How many PRs the author opened anywhere on GitHub in the hours before `end`."""
@@ -160,41 +167,57 @@ class GitHub:
         owner, repo, number = parse_pr_url(url)
         base = f"/repos/{owner}/{repo}"
         pr = self._get(f"{base}/pulls/{number}")
-        files = self._get(f"{base}/pulls/{number}/files", per_page=100)
-        author = pr["user"]["login"]
-        created = _ts(pr["created_at"])
-
-        account_created = None
-        if pr["user"].get("type") != "Bot":
-            try:
-                account_created = _ts(self._get(f"/users/{author}")["created_at"])
-            except httpx.HTTPStatusError:
-                pass  # deleted account
-
-        body = pr.get("body") or ""
+        author, created, body = pr["user"]["login"], _ts(pr["created_at"]), pr.get("body") or ""
         ref = CLOSING_REF.search(body) or ANY_REF.search(body)
-        linked = None
-        if ref:
+
+        def account() -> datetime | None:
+            if pr["user"].get("type") == "Bot":
+                return None
+            try:
+                return _ts(self._get(f"/users/{author}")["created_at"])
+            except httpx.HTTPStatusError:
+                return None  # deleted account
+
+        def linked() -> dict | None:
+            if not ref:
+                return None
             try:
                 issue = self._get(f"{base}/issues/{ref.group(1)}")
-                if "pull_request" not in issue:
-                    linked = {"number": issue["number"], "title": issue["title"], "body": issue.get("body") or ""}
             except httpx.HTTPStatusError:
-                pass
+                return None
+            if "pull_request" in issue:
+                return None
+            return {"number": issue["number"], "title": issue["title"], "body": issue.get("body") or ""}
+
+        # everything below depends only on the PR itself, so read it all at once
+        with ThreadPoolExecutor(8) as pool:
+            jobs = {
+                "files": pool.submit(self._get, f"{base}/pulls/{number}/files", per_page=100),
+                "account": pool.submit(account), "linked": pool.submit(linked),
+                "prs_24h": pool.submit(self.prs_in_window, author, created),
+                "labels": pool.submit(self.repo_labels, owner, repo),
+                "contributing": pool.submit(self.contributing, owner, repo),
+                "template": pool.submit(self.pr_template, owner, repo),
+                "similar": pool.submit(self.similar_recent, owner, repo, number, author, pr["title"], created),
+                "same_issue": pool.submit(self.same_issue, owner, repo, int(ref.group(1)), number, author, created)
+                if ref else None,
+            }
+            got = {k: f.result() if f else None for k, f in jobs.items()}
 
         result = PullRequest(
             owner=owner, repo=repo, number=number, url=pr["html_url"],
             title=pr["title"], body=body, author=author,
             author_association=pr.get("author_association", "NONE"),
-            created_at=created, files=files,
-            account_created_at=account_created,
-            prs_in_prior_24h=self.prs_in_window(author, created),
-            linked_issue=linked,
-            repo_labels=self.repo_labels(owner, repo),
-            contributing=self.contributing(owner, repo),
-            pr_template=self.pr_template(owner, repo),
+            created_at=created, files=got["files"],
+            account_created_at=got["account"],
+            prs_in_prior_24h=got["prs_24h"],
+            linked_issue=got["linked"],
+            repo_labels=got["labels"],
+            contributing=got["contributing"],
+            pr_template=got["template"],
+            similar_recent=got["similar"][0], similar_authors=got["similar"][1],
+            same_issue_prs=got["same_issue"] if got["linked"] else None,
         )
-        self.swarm(result)
         return result
 
     # --- writes -----------------------------------------------------------------

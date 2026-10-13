@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SlopGate · Live Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#E6EBE7; --muted:#8FA096; --line:rgba(156,211,174,.16); --glass:rgba(10,20,15,.66);
+          --spam:#E5484D; --review:#E0B04A; --changes:#E8794A; --fast:#3FD18A; --inj:#7B86F0; --green:#9CD3AE; }
+  * { box-sizing:border-box }
+  html, body { margin:0; height:100%; background:#060b09; color:var(--ink); font-family:Manrope,system-ui,sans-serif; overflow:hidden }
+  #c { position:fixed; inset:0; width:100%; height:100%; display:block }
+  .labels { position:fixed; inset:0; pointer-events:none }
+  .mono { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums }
+  .st { text-align:center; transform:translateY(-58px); white-space:nowrap }
+  .st b { display:block; font-size:12.5px; font-weight:700; letter-spacing:.01em; color:#fff; text-shadow:0 1px 8px #000 }
+  .st span { display:block; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--muted); letter-spacing:.04em }
+  .st.low { transform:translateY(54px) }
+  .orb { transform:translateY(-22px); font-size:10.5px; font-weight:600; color:#fff; white-space:nowrap; max-width:220px;
+         overflow:hidden; text-overflow:ellipsis; padding:2px 7px; border-radius:6px; background:rgba(6,11,9,.72); border:1px solid var(--line) }
+  .orb i { font-style:normal; font-family:'JetBrains Mono',monospace; font-size:9.5px; margin-left:6px; opacity:.9 }
+  .bin { transform:translateX(72px); font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink); white-space:nowrap }
+  .bin b { font-family:Manrope,sans-serif; font-size:20px; margin-right:6px }
+  .hud { position:fixed; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--line); border-radius:14px }
+  header.hud { top:16px; left:16px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; max-width:420px }
+  .brand { display:flex; align-items:center; gap:10px }
+  .logo { width:30px; height:30px; border-radius:9px; background:linear-gradient(160deg,#3E8A66,#245640); display:grid; place-items:center }
+  .brand h1 { margin:0; font-size:15px; font-weight:700; letter-spacing:-.01em }
+  .brand p { margin:0; font-size:11px; color:var(--muted) }
+  .conn { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted) }
+  .dot { width:8px; height:8px; border-radius:50%; background:#5b6a62 }
+  .dot.on { background:var(--green); box-shadow:0 0 0 0 rgba(156,211,174,.6); animation:pulse 2s infinite }
+  @keyframes pulse { 70% { box-shadow:0 0 0 7px rgba(156,211,174,0) } }
+  .counts { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px }
+  .count { background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:9px; padding:7px 8px }
+  .count div { font-size:9.5px; color:var(--muted); white-space:nowrap }
+  .count b { font-size:19px; font-weight:700; letter-spacing:-.02em }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+  button, .btn { height:30px; padding:0 12px; border-radius:8px; border:1px solid var(--line); background:rgba(255,255,255,.06);
+                 color:var(--ink); font:600 12px Manrope,sans-serif; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px }
+  button.primary { background:#2F6B4F; border-color:#3E8A66 }
+  button:hover, .btn:hover { background:rgba(255,255,255,.12) }
+  .hint { font-size:11px; color:var(--muted) } .hint code { color:var(--green) }
+  aside.hud { top:16px; right:16px; width:310px; max-height:calc(100vh - 32px - 210px); overflow:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px }
+  .kicker { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--green); font-weight:700 }
+  .title { font-size:15px; font-weight:700; line-height:1.3 }
+  .sub { font-size:11px; color:var(--muted) }
+  .pill { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; color:#06110c }
+  .facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px }
+  .facts div { background:rgba(255,255,255,.04); border-radius:8px; padding:6px 7px }
+  .facts small { display:block; font-size:9.5px; color:var(--muted) } .facts strong { font-size:13px }
+  .bars { display:flex; flex-direction:column; gap:5px }
+  .bar { display:grid; grid-template-columns:96px minmax(0,1fr) 34px; gap:8px; align-items:center; font-size:10.5px }
+  .bar .track { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden }
+  .bar .fill { height:100%; border-radius:3px; transition:width .5s cubic-bezier(.2,.8,.2,1) }
+  .timeline { display:flex; flex-direction:column; gap:3px; font-size:10.5px }
+  .timeline div { display:grid; grid-template-columns:62px minmax(0,1fr); gap:8px }
+  .rules span { display:inline-block; margin:2px 4px 0 0; font-size:10px; padding:2px 6px; border-radius:5px; background:rgba(229,72,77,.18); color:#F3A5A7 }
+  section.hud { left:16px; right:16px; bottom:16px; height:170px; padding:10px 14px; overflow:hidden; display:flex; flex-direction:column }
+  .loghead { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px }
+  #log { flex:1; overflow:hidden; display:flex; flex-direction:column-reverse; font-size:11px; line-height:1.55 }
+  #log div { flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .empty { color:var(--muted); font-size:12px; line-height:1.5 }
+  @media (max-width:900px) { aside.hud { display:none } header.hud { right:16px; max-width:none } .counts { grid-template-columns:repeat(3,minmax(0,1fr)) } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<header class="hud">
+  <div class="brand">
+    <div class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    <div><h1>SlopGate · live pipeline</h1><p>Every orb is a real pull request, moving as the server works on it.</p></div>
+    <div class="conn"><span class="dot" id="dot"></span><span id="connText">connecting…</span></div>
+  </div>
+  <div class="counts">
+    <div class="count"><div>PRs</div><b id="nAll">0</b></div>
+    <div class="count"><div style="color:var(--spam)">spam</div><b id="nSpam">0</b></div>
+    <div class="count"><div style="color:var(--review)">review</div><b id="nReview">0</b></div>
+    <div class="count"><div style="color:var(--fast)">fast-track</div><b id="nFast">0</b></div>
+    <div class="count"><div style="color:var(--inj)">injection</div><b id="nInj">0</b></div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="replay">▶ Replay a demo PR</button>
+    <a class="btn" href="/">Dashboard →</a>
+  </div>
+  <div class="hint">Open real PRs from a terminal: <code>demo/flood.sh 4 15</code> · watch there too: <code>uv run python demo/watch.py</code></div>
+</header>
+
+<aside class="hud" id="panel">
+  <div class="kicker">Now judging</div>
+  <div class="empty" id="panelEmpty">Waiting for a pull request. Open one on the demo repo, run <span class="mono">demo/flood.sh</span>, or press Replay.</div>
+  <div id="panelBody" style="display:none;flex-direction:column;gap:10px"></div>
+</aside>
+
+<section class="hud">
+  <div class="loghead"><span>Event stream · /api/events</span><span id="logCount" class="mono">0 events</span></div>
+  <div id="log" class="mono"></div>
+</section>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ---------------------------------------------------------------- palette
+const HEX = { spam:'#E5484D', needs_review:'#E0B04A', needs_changes:'#E8794A', fast_track:'#3FD18A', injection:'#7B86F0',
+              idle:'#9CD3AE', rules:'#F2A65A', grey:'#6B7470', white:'#E6EBE7' };
+const COL = Object.fromEntries(Object.entries(HEX).map(([k, v]) => [k, new THREE.Color(v)]));
+const LABEL = { spam:'spam', needs_review:'needs-review', needs_changes:'needs-changes', fast_track:'fast-track' };
+const verdictKey = (v, flags) => (flags || []).includes('injection') ? 'injection' : v;
+
+// ---------------------------------------------------------------- renderer, camera, post
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#060b09');
+scene.fog = new THREE.FogExp2('#060b09', 0.016);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 300);
+camera.position.set(-3, 8, 34);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(-1.5, 0.3, 0);
+controls.enableDamping = true;
+controls.minDistance = 14; controls.maxDistance = 70;
+controls.maxPolarAngle = Math.PI * 0.62;
+const css = new CSS2DRenderer();
+css.domElement.className = 'labels';
+document.body.appendChild(css.domElement);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.95, 0.55, 0.1);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+scene.add(new THREE.AmbientLight('#9CD3AE', 0.5));
+const key = new THREE.PointLight('#9CD3AE', 120, 80); key.position.set(0, 12, 14); scene.add(key);
+
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); css.setSize(w, h); composer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.position.z = w < 900 ? 46 : w < 1300 ? 40 : 34;
+  // keep the bins clear of the side panel: look a little right of centre when the panel shows
+  controls.target.x = w < 900 ? -1.5 : 3.5; camera.position.x = controls.target.x - 1.5;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+// ---------------------------------------------------------------- ground and dust
+const grid = new THREE.GridHelper(120, 60, '#1d3a2c', '#0e1d16');
+grid.position.y = -7.5; scene.add(grid);
+const dustGeo = new THREE.BufferGeometry();
+const dust = new Float32Array(900 * 3);
+for (let i = 0; i < dust.length; i += 3) { dust[i] = (Math.random() - .5) * 90; dust[i + 1] = Math.random() * 22 - 8; dust[i + 2] = (Math.random() - .5) * 50; }
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dust, 3));
+const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: '#3E8A66', size: 0.07, transparent: true, opacity: .7 }));
+scene.add(dustPts);
+
+// ---------------------------------------------------------------- stations
+const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
+const P = { github: V(-16, 0), webhook: V(-10.5, 0), facts: V(-5, 0), read: V(1, 3), rules: V(1, -3), fuse: V(6.5, 0), two: V(6.5, 6),
+            spam: V(13, 4.8), needs_changes: V(13, 1.6), needs_review: V(13, -1.6), fast_track: V(13, -4.8) };
+const stations = {};
+const glow = (hex, opacity = 1) => new THREE.MeshBasicMaterial({ color: hex, transparent: opacity < 1, opacity });
+function tag(text, sub, low) {
+  const el = document.createElement('div'); el.className = 'st' + (low ? ' low' : '');
+  const b = document.createElement('b'); b.textContent = text; el.appendChild(b);
+  if (sub) { const s = document.createElement('span'); s.textContent = sub; el.appendChild(s); }
+  return new CSS2DObject(el);
+}
+function station(name, group, label, sub, low) {
+  group.position.copy(P[name]); scene.add(group);
+  group.add(tag(label, sub, low));
+  stations[name] = { group, pulse: 0, spin: 0.2 };
+  return stations[name];
+}
+{ // GitHub: a portal ring where PRs arrive and labels land back
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.TorusGeometry(1.4, .07, 16, 96), glow(HEX.white)));
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(1.32, 64), glow(HEX.idle, .08)));
+  const inner = new THREE.Mesh(new THREE.TorusGeometry(.9, .025, 8, 64), glow(HEX.idle, .6)); g.add(inner);
+  station('github', g, 'GitHub', 'PR opened · labels land back').spinner = inner;
+}
+{ // Webhook: a square, signed gate
+  const g = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.TorusGeometry(1.5, .06, 8, 4), glow(HEX.idle)); frame.rotation.z = Math.PI / 4; g.add(frame);
+  const membrane = new THREE.Mesh(new THREE.PlaneGeometry(2.05, 2.05), glow(HEX.idle, .07)); g.add(membrane);
+  station('webhook', g, 'Webhook', 'HMAC-signed').membrane = membrane;
+}
+{ // Facts computed in code: a wireframe core with orbiting cubes
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: HEX.idle, wireframe: true })));
+  const sats = new THREE.Group();
+  for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .22), glow(HEX.white)); const a = i / 6 * Math.PI * 2; c.position.set(Math.cos(a) * 1.7, Math.sin(a) * .5, Math.sin(a) * 1.7); sats.add(c); }
+  g.add(sats);
+  station('facts', g, 'Facts in code', 'age · PRs/24h · swarm · CONTRIBUTING').spinner = sats;
+}
+const QORDER = ['spam', 'ai_slop', 'injection', 'risky', 'needs_tests', 'claims_match', 'follows_rules', 'matches_issue'];
+const QGOOD = { claims_match: 1, follows_rules: 1, matches_issue: 1 };
+const bars = [];
+{ // OpenJev: a core with one bar per question, sized by its probability
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(.75, 32, 32), glow('#2F6B4F')));
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(.95, 32, 32), glow(HEX.idle, .12)));
+  const ring = new THREE.Group();
+  QORDER.forEach((q, i) => {
+    const a = i / QORDER.length * Math.PI * 2;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(.2, 1, .2), glow(HEX.idle));
+    m.position.set(Math.cos(a) * 1.7, 0, Math.sin(a) * 1.7); m.scale.y = .08; m.userData = { target: .08, q };
+    ring.add(m); bars.push(m);
+  });
+  g.add(ring);
+  station('read', g, 'OpenJev read', 'System One · one call · every question a probability').spinner = ring;
+}
+const checks = [];
+{ // anti-slop: a ring of rule checks that light up as they pass or fail
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.OctahedronGeometry(.55, 0), glow(HEX.rules)));
+  const ring = new THREE.Group();
+  for (let i = 0; i < 19; i++) {
+    const a = i / 19 * Math.PI * 2;
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 12), glow(HEX.grey));
+    m.position.set(Math.cos(a) * 1.6, 0, Math.sin(a) * 1.6); ring.add(m); checks.push(m);
+  }
+  g.add(ring);
+  station('rules', g, 'anti-slop rules', '34 rules · unmodified · read-only', true).spinner = ring;
+}
+{ // Final call: where the read and the rules meet
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.05, 0), new THREE.MeshStandardMaterial({ color: '#1d3a2c', emissive: '#2F6B4F', emissiveIntensity: 1.2, flatShading: true }));
+  g.add(core);
+  g.add(new THREE.Mesh(new THREE.OctahedronGeometry(1.35, 0), new THREE.MeshBasicMaterial({ color: HEX.idle, wireframe: true, transparent: true, opacity: .4 })));
+  station('fuse', g, 'Final call', 'read + rules · trusted authors').spinner = core;
+}
+{ // System Two: only lights up when the read is unsure
+  const g = new THREE.Group();
+  const d = new THREE.Mesh(new THREE.DodecahedronGeometry(.85, 0), new THREE.MeshBasicMaterial({ color: '#8C95D6', wireframe: true }));
+  g.add(d);
+  station('two', g, 'System Two', 'open-weight chat LLM · only when unsure').spinner = d;
+}
+const bins = {};
+for (const v of ['spam', 'needs_changes', 'needs_review', 'fast_track']) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.TorusGeometry(1.15, .07, 12, 80), glow(HEX[v])));
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(1.08, 64), glow(HEX[v], .1)));
+  g.position.copy(P[v]); scene.add(g);
+  const el = document.createElement('div'); el.className = 'bin';
+  const n = document.createElement('b'); n.textContent = '0'; n.style.color = HEX[v];
+  el.appendChild(n); el.appendChild(document.createTextNode(LABEL[v]));
+  g.add(new CSS2DObject(el));
+  bins[v] = { group: g, count: 0, el: n, pulse: 0 };
+  stations[v] = { group: g, pulse: 0, spin: 0 };
+}
+
+// ---------------------------------------------------------------- the paths between stations
+const curve = (...pts) => new THREE.CatmullRomCurve3(pts);
+const SEG = {
+  in: curve(P.github, V(-13.2, .5), P.webhook),
+  fetch: curve(P.webhook, V(-7.8, -.4), P.facts),
+  toRead: curve(P.facts, V(-2.5, 2.2), P.read),
+  toRules: curve(P.facts, V(-2.5, -2.2), P.rules),
+  readOut: curve(P.read, V(4, 2.2), P.fuse),
+  rulesOut: curve(P.rules, V(4, -2.2), P.fuse),
+  toTwo: curve(P.fuse, V(7.6, 3), P.two),
+  fromTwo: curve(P.two, V(5.4, 3), P.fuse),
+  back: curve(V(13, 6.6), V(0, 11.5, -3), V(-16, 2.2)),
+};
+for (const v of Object.keys(bins)) SEG['to_' + v] = curve(P.fuse, V(9.8, P[v].y * .6), P[v]);
+for (const [name, c] of Object.entries(SEG)) {
+  const m = new THREE.Mesh(new THREE.TubeGeometry(c, 80, name === 'back' ? .02 : .035, 6), glow(name === 'back' ? '#7B86F0' : '#2F6B4F', name === 'back' ? .35 : .55));
+  scene.add(m);
+}
+
+// ---------------------------------------------------------------- orbs: one per pull request
+const runs = new Map();
+const sphere = new THREE.SphereGeometry(.32, 24, 24);
+const sparkGeo = new THREE.SphereGeometry(.17, 16, 16);
+function mover(mesh) { return { mesh, queue: [], seg: null, t: 0, speed: 9, onArrive: null, home: null }; }
+function go(m, name, then) { m.queue.push({ name, then }); }
+function stepMover(m, dt) {
+  if (!m.seg && m.queue.length) { const next = m.queue.shift(); m.seg = SEG[next.name]; m.t = 0; m.then = next.then; m.len = m.seg.getLength(); }
+  if (m.seg) {
+    m.t = Math.min(1, m.t + dt * m.speed / m.len);
+    m.mesh.position.copy(m.seg.getPointAt(m.t));
+    if (m.t >= 1) { m.home = m.seg.getPointAt(1).clone(); m.seg = null; if (m.then) m.then(); }
+  } else if (m.home) {  // waiting at a station: hover a little
+    const k = performance.now() / 1000 + m.mesh.id;
+    m.mesh.position.set(m.home.x + Math.cos(k * 2) * .35, m.home.y + Math.sin(k * 2.6) * .25, m.home.z + Math.sin(k * 2) * .35);
+  }
+}
+function orbLabel(text) {
+  const el = document.createElement('div'); el.className = 'orb';
+  const t = document.createElement('span'); t.textContent = text; el.appendChild(t);
+  const v = document.createElement('i'); el.appendChild(v);
+  return { obj: new CSS2DObject(el), el, verdict: v };
+}
+function newRun(e) {
+  const mesh = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: HEX.white }));
+  mesh.position.copy(P.github); mesh.scale.setScalar(.01); scene.add(mesh);
+  const lab = orbLabel(e.title || shortUrl(e.url)); mesh.add(lab.obj);
+  const run = { id: e.id, url: e.url, source: e.source, t0: e.t, events: [], title: e.title, orb: mover(mesh), label: lab, spark: null, born: performance.now() };
+  runs.set(e.id, run);
+  return run;
+}
+function setOrb(run, key) {
+  run.orb.mesh.material.color.copy(COL[key] || COL.idle);
+  run.label.verdict.textContent = key === 'injection' ? 'injection' : (LABEL[key] || '');
+  run.label.verdict.style.color = HEX[key] || HEX.idle;
+}
+function settle(run, key, instant) {
+  const b = bins[key === 'injection' ? 'needs_review' : key] || bins.needs_review;
+  b.count++; b.el.textContent = b.count; b.pulse = 1;
+  const mesh = run ? run.orb.mesh : new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: COL[key] || COL.idle }));
+  if (!run) scene.add(mesh);
+  const i = b.count - 1, a = i * 2.4, r = .25 + Math.sqrt(i) * .22;
+  const spot = b.group.position.clone().add(V(Math.cos(a) * r, Math.sin(a) * r, .3));
+  mesh.scale.setScalar(.45);
+  if (run) { run.orb.home = null; run.orb.queue = []; run.orb.seg = null; run.settled = { spot, at: performance.now() }; }
+  else mesh.position.copy(spot);
+  if (run && !instant) setTimeout(() => run.label.obj.element.style.opacity = '0', 5000);
+  if (run && instant) { mesh.position.copy(spot); run.label.obj.element.style.display = 'none'; }
+}
+const comets = [];
+function comet(color) {
+  const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color })); scene.add(m);
+  comets.push({ m, t: 0 });
+}
+
+// ---------------------------------------------------------------- the events
+const counts = { all: 0, spam: 0, review: 0, fast: 0, inj: 0 };
+const modelMs = [];
+let focus = null, eventCount = 0;
+const shortUrl = u => (u || '').replace('https://github.com/', '').replace('/pull/', '#');
+const pulse = name => { if (stations[name]) stations[name].pulse = 1; };
+
+function onStage(e, instant) {
+  let run = runs.get(e.id);
+  if (!run) { if (e.stage !== 'received' && instant) return; run = newRun(e); }
+  run.events.push(e);
+  if (e.title) run.title = e.title;
+  const o = run.orb;
+  switch (e.stage) {
+    case 'received': pulse('github'); if (!instant) { go(o, 'in', () => pulse('webhook')); } break;
+    case 'fetching': if (!instant) go(o, 'fetch', () => pulse('facts')); break;
+    case 'facts': run.facts = e; run.label.el.firstChild.textContent = (e.title || '').slice(0, 42); pulse('facts'); break;
+    case 'rules_start':
+      if (!instant) {
+        run.spark = mover(new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: HEX.rules })));
+        run.spark.mesh.position.copy(P.facts); scene.add(run.spark.mesh); run.spark.speed = 10;
+        go(run.spark, 'toRules', () => pulse('rules'));
+      }
+      break;
+    case 'read_start': if (!instant) go(o, 'toRead', () => pulse('read')); break;
+    case 'read_done':
+      run.read = e; if (e.server_ms) modelMs.push(e.server_ms);
+      setBars(e.probabilities); pulse('read');
+      if (!instant) { setOrb(run, verdictKey(e.verdict, e.flags)); go(o, 'readOut'); }
+      break;
+    case 'rules_done':
+      run.rules = e; setChecks(e); pulse('rules');
+      if (run.spark && !instant) {
+        run.spark.mesh.material.color.set((e.failed || 0) >= 2 ? HEX.spam : HEX.fast_track);
+        const s = run.spark;
+        go(s, 'rulesOut', () => { scene.remove(s.mesh); pulse('fuse'); });
+      }
+      break;
+    case 'fused':
+      run.final = e; pulse('fuse');
+      if (!instant) setOrb(run, verdictKey(e.verdict, e.flags));
+      break;
+    case 'escalated': pulse('two'); if (!instant) go(o, 'toTwo', () => pulse('two')); break;
+    case 'second_opinion': run.second = e; if (!instant) go(o, 'fromTwo', () => pulse('fuse')); break;
+    case 'done': {
+      const item = e.item || {};
+      const key = verdictKey(item.verdict, item.flags);
+      run.done = e;
+      counts.all++;
+      if (key === 'spam') counts.spam++; else if (key === 'fast_track') counts.fast++; else counts.review++;
+      if (key === 'injection') counts.inj++;
+      if (instant) { settle(run, key, true); break; }
+      setOrb(run, key);
+      const binKey = key === 'injection' ? 'needs_review' : key;
+      go(o, 'to_' + binKey, () => { settle(run, key, false); if (e.applied) comet(HEX[key] || HEX.idle); });
+      break;
+    }
+    case 'failed': run.failed = e; run.orb.mesh.material.color.copy(COL.grey); run.label.verdict.textContent = 'error'; break;
+  }
+  if (!instant || e.stage === 'done') renderCounts();
+  if (!instant && (e.stage === 'received' || run === focus)) { focus = run; renderPanel(); }
+  logLine(e, run, instant);
+}
+
+function setBars(p) {
+  for (const b of bars) {
+    const v = (p || {})[b.userData.q];
+    b.userData.target = v == null ? .05 : Math.max(.05, v * 2.4);
+    const bad = QGOOD[b.userData.q] ? v != null && v < .4 : v > .6;
+    b.material.color.set(v == null ? HEX.grey : bad ? HEX.spam : HEX.fast_track);
+  }
+}
+function setChecks(e) {
+  const failed = e.error ? 0 : e.failed || 0, total = e.error || e.result === 'skipped' ? 0 : e.total || 19;
+  checks.forEach((c, i) => c.material.color.set(e.error || i >= total ? HEX.grey : i < failed ? HEX.spam : HEX.fast_track));
+}
+
+// ---------------------------------------------------------------- HUD
+const $ = id => document.getElementById(id);
+function renderCounts() {
+  $('nAll').textContent = counts.all; $('nSpam').textContent = counts.spam; $('nReview').textContent = counts.review;
+  $('nFast').textContent = counts.fast; $('nInj').textContent = counts.inj;
+}
+function el(tag, cls, text, style) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; if (style) n.style.cssText = style; return n; }
+function renderPanel() {
+  const r = focus; if (!r) return;
+  $('panelEmpty').style.display = 'none';
+  const body = $('panelBody'); body.style.display = 'flex'; body.replaceChildren();
+  const f = r.facts || {}, i = f.info || {};
+  body.append(el('div', 'title', r.title || shortUrl(r.url)),
+              el('div', 'sub mono', (f.repo ? f.repo + '#' + f.number + ' · @' + f.author : shortUrl(r.url)) + ' · ' + r.source));
+  const fin = r.done && r.done.item ? r.done.item : r.final;
+  if (fin) {
+    const key = verdictKey(fin.verdict, fin.flags);
+    const pill = el('span', 'pill', key === 'injection' ? 'prompt-injection' : LABEL[key] || key, 'background:' + (HEX[key] || HEX.idle));
+    const row = el('div', null, null, 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'); row.append(pill);
+    if (fin.spam_type) row.append(el('span', 'sub mono', fin.spam_type.replace(/_/g, '-')));
+    if (r.done && r.done.labels && r.done.labels.length) row.append(el('span', 'sub mono', '→ ' + r.done.labels.join(', ')));
+    body.append(row);
+  }
+  if (r.facts) {
+    const g = el('div', 'facts');
+    [['age', i.age_days == null ? '—' : i.age_days + 'd'], ['PRs/24h', i.prs_24h ?? '—'], ['swarm', i.swarm ?? 0], ['trusted', f.trusted ? 'yes' : 'no']]
+      .forEach(([k, v]) => { const d = el('div'); d.append(el('small', null, k), el('strong', 'mono', String(v))); g.append(d); });
+    body.append(el('div', 'kicker', 'Facts computed in code'), g);
+  }
+  if (r.read) {
+    body.append(el('div', 'kicker', 'OpenJev read · ' + Math.round(r.read.server_ms || 0) + ' ms model time'));
+    const bs = el('div', 'bars');
+    QORDER.filter(q => q in (r.read.probabilities || {})).forEach(q => {
+      const v = r.read.probabilities[q], bad = QGOOD[q] ? v < .4 : v > .6;
+      const row = el('div', 'bar'); const tr = el('div', 'track'); const fl = el('div', 'fill', null, 'width:' + (v * 100) + '%;background:' + (bad ? HEX.spam : HEX.fast_track));
+      tr.append(fl); row.append(el('span', 'mono', q), tr, el('span', 'mono', v.toFixed(2))); bs.append(row);
+    });
+    body.append(bs);
+  }
+  if (r.rules) {
+    body.append(el('div', 'kicker', r.rules.error ? 'anti-slop rules · unavailable' : r.rules.result === 'skipped' ? 'anti-slop rules · skipped: it exempts owners, members and collaborators' : 'anti-slop rules · ' + r.rules.failed + ' of ' + r.rules.total + ' failed'));
+    if (r.rules.checks && r.rules.checks.length) { const d = el('div', 'rules'); r.rules.checks.forEach(c => { const s = el('span', 'mono', c.name); s.title = c.why; d.append(s); }); body.append(d); }
+  }
+  if (r.second) body.append(el('div', 'kicker', 'System Two second opinion'), el('div', 'sub', r.second.text || r.second.verdict));
+  body.append(el('div', 'kicker', 'Timeline'));
+  const tl = el('div', 'timeline mono');
+  r.events.forEach(ev => { const d = el('div'); d.append(el('span', null, '+' + Math.round((ev.t - r.t0) * 1000) + ' ms', 'color:var(--muted)'), el('span', null, ev.stage)); tl.append(d); });
+  body.append(tl);
+}
+const STAGE_COLOR = { received: HEX.white, read_done: HEX.idle, rules_done: HEX.rules, fused: '#fff', escalated: '#8C95D6', second_opinion: '#8C95D6', done: HEX.fast_track, failed: HEX.spam };
+function logLine(e, run, instant) {
+  eventCount++; $('logCount').textContent = eventCount + ' events';
+  const ms = Math.round((e.t - run.t0) * 1000);
+  let detail = '';
+  if (e.stage === 'received') detail = (e.title || shortUrl(e.url)) + ' (' + e.source + ')';
+  else if (e.stage === 'facts') detail = shortUrl(run.url) + ' · @' + e.author + ' · ' + (e.trusted ? 'trusted' : 'not trusted');
+  else if (e.stage === 'read_done') detail = e.verdict + ' · p(spam) ' + (e.probabilities.spam ?? 0).toFixed(2) + ' · ' + Math.round(e.server_ms || 0) + ' ms model';
+  else if (e.stage === 'rules_done') detail = e.error ? 'unavailable' : e.result === 'skipped' ? 'skipped (author exempt in anti-slop)' : e.failed + '/' + e.total + ' failed ' + (e.checks || []).map(c => c.name).join(', ');
+  else if (e.stage === 'fused') detail = 'FINAL ' + e.verdict + (e.spam_type ? ' (' + e.spam_type + ')' : '') + (e.uncertain ? ' · unsure → System Two' : '');
+  else if (e.stage === 'done') detail = (e.labels && e.labels.length ? 'labels: ' + e.labels.join(', ') : 'read-only replay');
+  else if (e.stage === 'failed') detail = e.error;
+  const line = el('div', null, null, 'color:' + (instant ? '#5b6a62' : STAGE_COLOR[e.stage] || '#8FA096'));
+  line.textContent = new Date(e.t * 1000).toLocaleTimeString() + '  +' + String(ms).padStart(6) + ' ms  ' + e.stage.padEnd(15) + ' ' + detail;
+  const log = $('log'); log.prepend(line);
+  while (log.children.length > 80) log.lastChild.remove();
+}
+
+// ---------------------------------------------------------------- live connection
+function connect() {
+  const es = new EventSource('/api/events');
+  es.addEventListener('hello', ev => {
+    $('dot').classList.add('on'); $('connText').textContent = 'live';
+    const { backlog } = JSON.parse(ev.data);
+    const done = new Set(backlog.filter(e => e.stage === 'done' || e.stage === 'failed').map(e => e.id));
+    for (const e of backlog) onStage(e, done.has(e.id));
+  });
+  es.addEventListener('stage', ev => onStage(JSON.parse(ev.data), false));
+  es.onerror = () => { $('dot').classList.remove('on'); $('connText').textContent = 'reconnecting…'; };
+}
+connect();
+$('replay').onclick = () => fetch('/api/replay', { method: 'POST' });
+addEventListener('keydown', e => { if (e.key === 'r' && !e.metaKey && !e.ctrlKey) fetch('/api/replay', { method: 'POST' }); });
+
+// ---------------------------------------------------------------- frame loop
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), .05), now = performance.now() / 1000;
+  for (const [name, s] of Object.entries(stations)) {
+    s.pulse = Math.max(0, s.pulse - dt * 1.4);
+    s.group.scale.setScalar(1 + s.pulse * .22);
+    if (s.spinner) s.spinner.rotation.y += dt * (.25 + s.pulse * 3);
+    if (s.membrane) s.membrane.material.opacity = .07 + s.pulse * .45;
+  }
+  for (const b of Object.values(bins)) { b.pulse = Math.max(0, b.pulse - dt * 1.2); b.group.scale.setScalar(1 + b.pulse * .2); }
+  for (const b of bars) b.scale.y += (b.userData.target - b.scale.y) * Math.min(1, dt * 6);
+  for (const run of runs.values()) {
+    const m = run.orb.mesh;
+    if (m.scale.x < 1 && !run.settled) m.scale.setScalar(Math.min(1, m.scale.x + dt * 3));
+    if (run.settled) m.position.lerp(run.settled.spot, Math.min(1, dt * 5));
+    else stepMover(run.orb, dt);
+    if (run.spark) stepMover(run.spark, dt);
+  }
+  for (let i = comets.length - 1; i >= 0; i--) {
+    const c = comets[i]; c.t += dt * .55;
+    if (c.t >= 1) { scene.remove(c.m); comets.splice(i, 1); pulse('github'); continue; }
+    c.m.position.copy(SEG.back.getPointAt(c.t));
+  }
+  if (runs.size > 60) { const old = [...runs.values()].filter(r => r.settled).slice(0, runs.size - 60); old.forEach(r => { scene.remove(r.orb.mesh); runs.delete(r.id); }); }
+  dustPts.rotation.y = now * .01;
+  controls.update();
+  composer.render(); css.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>
