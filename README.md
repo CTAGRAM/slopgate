@@ -94,9 +94,11 @@ live server or from [`eval/results`](eval/results); nothing is mocked.
 - **Threats, cost & stack**: prompt injection, risky CI changes and swarms on real PRs, latency, the
   System One / System Two split, and the open models behind it.
 
-- **Live 3D pipeline** (`/sim`, Three.js): every real PR is an orb that flows from GitHub through the
-  webhook, the facts, OpenJev's read and anti-slop's rules in parallel, into the final call and its
-  verdict bin, driven by the server's event stream (`/api/events`) with the real timings.
+- **Live pipeline** (`/sim`, an illustrated Three.js diorama): every real PR is a card that travels from
+  GitHub, under the webhook arch, past the facts desk, through OpenJev's dome (pillars rise to each
+  question's probability) and anti-slop's checklist board (tiles flip as rules pass or fail) in parallel,
+  into the final-call gazebo and its verdict tray, driven by the server's event stream (`/api/events`)
+  with the real timings.
 
 Drive it from a terminal:
 

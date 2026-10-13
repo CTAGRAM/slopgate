@@ -7,63 +7,78 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#E6EBE7; --muted:#8FA096; --line:rgba(156,211,174,.16); --glass:rgba(10,20,15,.66);
-          --spam:#E5484D; --review:#E0B04A; --changes:#E8794A; --fast:#3FD18A; --inj:#7B86F0; --green:#9CD3AE; }
+  :root { --ink:#14161A; --muted:#6A6E75; --soft:#8A8E95; --line:#EFEDE9; --green:#2F6B4F; --mint:#9CD3AE;
+          --spam:#C9605E; --review:#C9962E; --changes:#D9825A; --fast:#4E9E74; --inj:#6E78B8;
+          --card:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.74));
+          --shadow:0 1px 2px rgba(20,22,26,.04),0 12px 32px -14px rgba(20,22,26,.18),inset 0 1px 0 #fff; }
   * { box-sizing:border-box }
-  html, body { margin:0; height:100%; background:#060b09; color:var(--ink); font-family:Manrope,system-ui,sans-serif; overflow:hidden }
+  html, body { margin:0; height:100%; overflow:hidden; color:var(--ink); font-family:Manrope,system-ui,sans-serif;
+    background:radial-gradient(ellipse 50% 40% at 10% 6%,rgba(156,211,174,.5),transparent 62%),
+               radial-gradient(ellipse 45% 38% at 94% 26%,rgba(110,120,184,.18),transparent 62%),
+               radial-gradient(ellipse 55% 42% at 58% 104%,rgba(196,168,107,.22),transparent 62%),#F4F3EF; }
   #c { position:fixed; inset:0; width:100%; height:100%; display:block }
   .labels { position:fixed; inset:0; pointer-events:none }
   .mono { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums }
-  .st { text-align:center; transform:translateY(-58px); white-space:nowrap }
-  .st b { display:block; font-size:12.5px; font-weight:700; letter-spacing:.01em; color:#fff; text-shadow:0 1px 8px #000 }
-  .st span { display:block; font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--muted); letter-spacing:.04em }
-  .st.low { transform:translateY(54px) }
-  .orb { transform:translateY(-22px); font-size:10.5px; font-weight:600; color:#fff; white-space:nowrap; max-width:220px;
-         overflow:hidden; text-overflow:ellipsis; padding:2px 7px; border-radius:6px; background:rgba(6,11,9,.72); border:1px solid var(--line) }
-  .orb i { font-style:normal; font-family:'JetBrains Mono',monospace; font-size:9.5px; margin-left:6px; opacity:.9 }
-  .bin { transform:translateX(72px); font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink); white-space:nowrap }
-  .bin b { font-family:Manrope,sans-serif; font-size:20px; margin-right:6px }
-  .hud { position:fixed; background:var(--glass); backdrop-filter:blur(14px) saturate(1.2); border:1px solid var(--line); border-radius:14px }
-  header.hud { top:16px; left:16px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; max-width:420px }
+  .tag { transform:translateY(-46px); padding:5px 10px 6px; border-radius:10px; background:rgba(255,255,255,.88);
+         border:1px solid #fff; box-shadow:0 6px 18px -8px rgba(20,22,26,.25); text-align:center; white-space:nowrap }
+  .tag b { display:block; font-size:12px; font-weight:700 }
+  .tag span { display:block; font-size:10px; color:var(--muted) }
+  .chip { transform:translateY(-26px); font-size:10.5px; font-weight:600; white-space:nowrap; max-width:200px; overflow:hidden;
+          text-overflow:ellipsis; padding:3px 8px; border-radius:7px; background:#fff; box-shadow:0 4px 14px -6px rgba(20,22,26,.3);
+          transition:opacity .6s ease }
+  .chip i { font-style:normal; margin-left:6px; font-size:10px; font-weight:700 }
+  .count { transform:translateY(34px); font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; background:#fff;
+           box-shadow:0 4px 14px -6px rgba(20,22,26,.25); white-space:nowrap }
+  .count b { font-size:14px; margin-right:5px }
+  .card { position:fixed; background:var(--card); backdrop-filter:blur(14px) saturate(1.2); border:1px solid rgba(255,255,255,.9);
+          box-shadow:var(--shadow); border-radius:16px }
+  header.card { top:16px; left:16px; right:16px; height:62px; padding:0 14px 0 16px; display:flex; align-items:center; gap:16px }
+  header .grow { flex:1 }
   .brand { display:flex; align-items:center; gap:10px }
-  .logo { width:30px; height:30px; border-radius:9px; background:linear-gradient(160deg,#3E8A66,#245640); display:grid; place-items:center }
-  .brand h1 { margin:0; font-size:15px; font-weight:700; letter-spacing:-.01em }
-  .brand p { margin:0; font-size:11px; color:var(--muted) }
-  .conn { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted) }
-  .dot { width:8px; height:8px; border-radius:50%; background:#5b6a62 }
-  .dot.on { background:var(--green); box-shadow:0 0 0 0 rgba(156,211,174,.6); animation:pulse 2s infinite }
-  @keyframes pulse { 70% { box-shadow:0 0 0 7px rgba(156,211,174,0) } }
-  .counts { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px }
-  .count { background:rgba(255,255,255,.04); border:1px solid var(--line); border-radius:9px; padding:7px 8px }
-  .count div { font-size:9.5px; color:var(--muted); white-space:nowrap }
-  .count b { font-size:19px; font-weight:700; letter-spacing:-.02em }
-  .actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
-  button, .btn { height:30px; padding:0 12px; border-radius:8px; border:1px solid var(--line); background:rgba(255,255,255,.06);
-                 color:var(--ink); font:600 12px Manrope,sans-serif; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px }
-  button.primary { background:#2F6B4F; border-color:#3E8A66 }
-  button:hover, .btn:hover { background:rgba(255,255,255,.12) }
-  .hint { font-size:11px; color:var(--muted) } .hint code { color:var(--green) }
-  aside.hud { top:16px; right:16px; width:310px; max-height:calc(100vh - 32px - 210px); overflow:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px }
-  .kicker { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--green); font-weight:700 }
-  .title { font-size:15px; font-weight:700; line-height:1.3 }
-  .sub { font-size:11px; color:var(--muted) }
-  .pill { display:inline-block; font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; color:#06110c }
+  .logo { width:32px; height:32px; border-radius:10px; background:linear-gradient(160deg,#3E8A66,#245640); display:grid; place-items:center;
+          box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px rgba(47,107,79,.3) }
+  .brand h1 { margin:0; font-size:15.5px; font-weight:700; letter-spacing:-.01em }
+  .brand p { margin:1px 0 0; font-size:11.5px; color:var(--muted) }
+  .live { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em }
+  .dot { width:7px; height:7px; border-radius:50%; background:#C9C6BF }
+  .dot.on { background:#1E7F4F; animation:pulse 2s infinite }
+  @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(30,127,79,.35) } 70% { box-shadow:0 0 0 7px rgba(30,127,79,0) } }
+  .counts { display:flex; flex-wrap:wrap; gap:6px }
+  .pill { display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; background:rgba(20,22,26,.04); font-size:12px; color:var(--muted) }
+  .pill b { color:var(--ink); font-size:13px } .pill i { width:8px; height:8px; border-radius:50% }
+  .actions { display:flex; gap:8px; flex-wrap:wrap }
+  button, .btn { height:34px; padding:0 14px; border-radius:9px; border:1px solid #E5E3DD; background:rgba(255,255,255,.8); color:var(--ink);
+                 font:600 13px Manrope,sans-serif; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:7px;
+                 transition:background .2s, transform .2s, box-shadow .2s }
+  button.primary { background:var(--green); border-color:var(--green); color:#fff }
+  button:hover, .btn:hover { transform:translateY(-1px); box-shadow:0 6px 16px -8px rgba(20,22,26,.35) }
+  .hint { font-size:11.5px; color:var(--muted); line-height:1.5 } .hint code { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--green) }
+  aside.card { top:92px; right:16px; width:320px; max-height:calc(100vh - 108px); overflow:auto; padding:16px 18px; display:flex; flex-direction:column; gap:12px }
+  .kicker { font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--soft); font-weight:700 }
+  .title { font-size:16px; font-weight:700; line-height:1.3; letter-spacing:-.01em }
+  .sub { font-size:11.5px; color:var(--muted) }
+  .verdict { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:7px }
   .facts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px }
-  .facts div { background:rgba(255,255,255,.04); border-radius:8px; padding:6px 7px }
-  .facts small { display:block; font-size:9.5px; color:var(--muted) } .facts strong { font-size:13px }
-  .bars { display:flex; flex-direction:column; gap:5px }
-  .bar { display:grid; grid-template-columns:96px minmax(0,1fr) 34px; gap:8px; align-items:center; font-size:10.5px }
-  .bar .track { height:6px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden }
-  .bar .fill { height:100%; border-radius:3px; transition:width .5s cubic-bezier(.2,.8,.2,1) }
-  .timeline { display:flex; flex-direction:column; gap:3px; font-size:10.5px }
-  .timeline div { display:grid; grid-template-columns:62px minmax(0,1fr); gap:8px }
-  .rules span { display:inline-block; margin:2px 4px 0 0; font-size:10px; padding:2px 6px; border-radius:5px; background:rgba(229,72,77,.18); color:#F3A5A7 }
-  section.hud { left:16px; right:16px; bottom:16px; height:170px; padding:10px 14px; overflow:hidden; display:flex; flex-direction:column }
-  .loghead { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px }
-  #log { flex:1; overflow:hidden; display:flex; flex-direction:column-reverse; font-size:11px; line-height:1.55 }
-  #log div { flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  .empty { color:var(--muted); font-size:12px; line-height:1.5 }
-  @media (max-width:900px) { aside.hud { display:none } header.hud { right:16px; max-width:none } .counts { grid-template-columns:repeat(3,minmax(0,1fr)) } }
+  .facts div { background:#F4F3EF; border-radius:9px; padding:7px 8px }
+  .facts small { display:block; font-size:10px; color:var(--soft) } .facts strong { font-size:14px }
+  .bars { display:flex; flex-direction:column; gap:6px }
+  .bar { display:grid; grid-template-columns:100px minmax(0,1fr) 34px; gap:8px; align-items:center; font-size:11px }
+  .bar .track { height:7px; border-radius:4px; background:#EFEDE9; overflow:hidden }
+  .bar .fill { height:100%; border-radius:4px; transition:width .7s cubic-bezier(.2,.8,.2,1) }
+  .rules span { display:inline-block; margin:3px 4px 0 0; font-size:10.5px; padding:2px 7px; border-radius:6px; background:#FCEDED; color:#A0403E }
+  .timeline { display:flex; flex-direction:column; gap:4px; font-size:11px; border-top:1px solid var(--line); padding-top:10px }
+  .timeline div { display:grid; grid-template-columns:66px minmax(0,1fr); gap:8px }
+  .timeline span:first-child { color:var(--soft) }
+  .empty { font-size:12.5px; color:var(--muted); line-height:1.55 }
+  section.card { left:16px; bottom:16px; width:min(500px, calc(100vw - 32px)); height:200px; padding:12px 16px; display:flex; flex-direction:column }
+  .loghead { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+  #log { flex:1; overflow:hidden; display:flex; flex-direction:column; gap:3px; font-size:11px }
+  #log div { flex-shrink:0; display:grid; grid-template-columns:8px 58px 54px 104px minmax(0,1fr); gap:8px; align-items:center; white-space:nowrap }
+  #log div span:last-child { overflow:hidden; text-overflow:ellipsis; color:var(--muted) }
+  #log i { width:7px; height:7px; border-radius:50% }
+  #log .old { opacity:.45 }
+  @media (max-width:1100px) { aside.card { display:none } .hint { display:none } }
+  @media (max-width:860px) { .counts { display:none } section.card { display:none } }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
@@ -73,354 +88,405 @@
 <body>
 <canvas id="c"></canvas>
 
-<header class="hud">
+<header class="card">
   <div class="brand">
     <div class="logo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
-    <div><h1>SlopGate · live pipeline</h1><p>Every orb is a real pull request, moving as the server works on it.</p></div>
-    <div class="conn"><span class="dot" id="dot"></span><span id="connText">connecting…</span></div>
+    <div><h1>SlopGate · live pipeline</h1><p>Each card is a real pull request, moving as the server works on it.</p></div>
   </div>
+  <div class="live"><span class="dot" id="dot"></span><span id="connText">connecting</span></div>
+  <div class="grow"></div>
   <div class="counts">
-    <div class="count"><div>PRs</div><b id="nAll">0</b></div>
-    <div class="count"><div style="color:var(--spam)">spam</div><b id="nSpam">0</b></div>
-    <div class="count"><div style="color:var(--review)">review</div><b id="nReview">0</b></div>
-    <div class="count"><div style="color:var(--fast)">fast-track</div><b id="nFast">0</b></div>
-    <div class="count"><div style="color:var(--inj)">injection</div><b id="nInj">0</b></div>
+    <div class="pill">PRs <b id="nAll">0</b></div>
+    <div class="pill"><i style="background:var(--spam)"></i>spam <b id="nSpam">0</b></div>
+    <div class="pill"><i style="background:var(--review)"></i>review <b id="nReview">0</b></div>
+    <div class="pill"><i style="background:var(--fast)"></i>fast-track <b id="nFast">0</b></div>
+    <div class="pill"><i style="background:var(--inj)"></i>injection <b id="nInj">0</b></div>
   </div>
-  <div class="actions">
-    <button class="primary" id="replay">▶ Replay a demo PR</button>
-    <a class="btn" href="/">Dashboard →</a>
-  </div>
-  <div class="hint">Open real PRs from a terminal: <code>demo/flood.sh 4 15</code> · watch there too: <code>uv run python demo/watch.py</code></div>
+  <div class="actions"><button class="primary" id="replay">▶ Replay a demo PR</button><a class="btn" href="/">Dashboard →</a></div>
 </header>
 
-<aside class="hud" id="panel">
+<aside class="card">
   <div class="kicker">Now judging</div>
   <div class="empty" id="panelEmpty">Waiting for a pull request. Open one on the demo repo, run <span class="mono">demo/flood.sh</span>, or press Replay.</div>
-  <div id="panelBody" style="display:none;flex-direction:column;gap:10px"></div>
+  <div id="panelBody" style="display:none;flex-direction:column;gap:12px"></div>
 </aside>
 
-<section class="hud">
-  <div class="loghead"><span>Event stream · /api/events</span><span id="logCount" class="mono">0 events</span></div>
+<section class="card">
+  <div class="loghead"><span class="kicker">Event stream</span><span class="sub mono" id="logCount">0 events</span></div>
+  <div class="hint" style="margin:-4px 0 8px">Send real PRs: <code>demo/flood.sh 4 15</code> · as text: <code>uv run python demo/watch.py</code></div>
   <div id="log" class="mono"></div>
 </section>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-// ---------------------------------------------------------------- palette
-const HEX = { spam:'#E5484D', needs_review:'#E0B04A', needs_changes:'#E8794A', fast_track:'#3FD18A', injection:'#7B86F0',
-              idle:'#9CD3AE', rules:'#F2A65A', grey:'#6B7470', white:'#E6EBE7' };
-const COL = Object.fromEntries(Object.entries(HEX).map(([k, v]) => [k, new THREE.Color(v)]));
-const LABEL = { spam:'spam', needs_review:'needs-review', needs_changes:'needs-changes', fast_track:'fast-track' };
+// ------------------------------------------------------------------ palette: the dashboard's, softened for matte surfaces
+const HEX = { board:'#F3F0E9', side:'#E3DDD1', road:'#E6E0D3', cream:'#FBFAF7', ink:'#2B2F2C', green:'#2F6B4F', sage:'#A9CDB7',
+  mint:'#C6E3D0', wood:'#D8C3A0', woodDark:'#B89E78', stone:'#D9D3C7', leaf:'#8DB89C', leafDark:'#6E9F80', trunk:'#A88B6A',
+  spam:'#C9605E', needs_review:'#D3A54B', needs_changes:'#D9825A', fast_track:'#4E9E74', injection:'#6E78B8', idle:'#C9C6BF', tile:'#E9E5DC' };
+const LABEL = { spam:'spam', needs_review:'needs-review', needs_changes:'needs-changes', fast_track:'fast-track', injection:'prompt-injection' };
 const verdictKey = (v, flags) => (flags || []).includes('injection') ? 'injection' : v;
+const matte = (color, rough = .9) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0 });
 
-// ---------------------------------------------------------------- renderer, camera, post
+// ------------------------------------------------------------------ renderer, light, camera
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#060b09');
-scene.fog = new THREE.FogExp2('#060b09', 0.016);
-const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 300);
-camera.position.set(-3, 8, 34);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+scene.environmentIntensity = .45;
+scene.add(new THREE.HemisphereLight('#FFFDF7', '#E6DFD2', 1.6));
+const sun = new THREE.DirectionalLight('#FFF4E6', 2.1);
+sun.position.set(-16, 30, 20); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 9; sun.shadow.blurSamples = 20; sun.shadow.bias = -.0005;
+Object.assign(sun.shadow.camera, { left: -32, right: 32, top: 20, bottom: -20, near: 1, far: 90 });
+scene.add(sun);
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 400);
+const OFFSET = new THREE.Vector3(11, 25, 34);  // a gentle three-quarter view, so the flow reads left to right
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(-1.5, 0.3, 0);
-controls.enableDamping = true;
-controls.minDistance = 14; controls.maxDistance = 70;
-controls.maxPolarAngle = Math.PI * 0.62;
+controls.enableDamping = true; controls.dampingFactor = .06;
+controls.enablePan = false; controls.minZoom = .7; controls.maxZoom = 2.2;
+controls.minPolarAngle = .55; controls.maxPolarAngle = 1.12;
+controls.minAzimuthAngle = -.35; controls.maxAzimuthAngle = .9;
 const css = new CSS2DRenderer();
 css.domElement.className = 'labels';
 document.body.appendChild(css.domElement);
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.95, 0.55, 0.1);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
-scene.add(new THREE.AmbientLight('#9CD3AE', 0.5));
-const key = new THREE.PointLight('#9CD3AE', 120, 80); key.position.set(0, 12, 14); scene.add(key);
-
 function resize() {
-  const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h, false); css.setSize(w, h); composer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.position.z = w < 900 ? 46 : w < 1300 ? 40 : 34;
-  // keep the bins clear of the side panel: look a little right of centre when the panel shows
-  controls.target.x = w < 900 ? -1.5 : 3.5; camera.position.x = controls.target.x - 1.5;
+  // fit the stations (about 46 units wide) into the space the panels leave free, then centre them there
+  const w = innerWidth, h = innerHeight, a = w / h;
+  const panel = w > 1100 ? 336 : 0, top = 78;
+  const freeW = (w - panel - 32) / w, freeH = (h - top - 24) / h;
+  const view = Math.max(24, Math.min(46 / (a * freeW), 30 / freeH));
+  Object.assign(camera, { left: -view * a / 2, right: view * a / 2, top: view / 2, bottom: -view / 2 });
   camera.updateProjectionMatrix();
+  const perPx = view / h;
+  const target = new THREE.Vector3(-1.5, 0, 0);
+  camera.position.copy(target).add(OFFSET);
+  camera.lookAt(target);
+  const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+  const shift = right.multiplyScalar(panel / 2 * perPx).add(up.multiplyScalar(top / 2 * perPx));
+  target.add(shift); camera.position.add(shift);
+  controls.target.copy(target); controls.update();
+  renderer.setSize(w, h, false); css.setSize(w, h);
 }
 addEventListener('resize', resize); resize();
 
-// ---------------------------------------------------------------- ground and dust
-const grid = new THREE.GridHelper(120, 60, '#1d3a2c', '#0e1d16');
-grid.position.y = -7.5; scene.add(grid);
-const dustGeo = new THREE.BufferGeometry();
-const dust = new Float32Array(900 * 3);
-for (let i = 0; i < dust.length; i += 3) { dust[i] = (Math.random() - .5) * 90; dust[i + 1] = Math.random() * 22 - 8; dust[i + 2] = (Math.random() - .5) * 50; }
-dustGeo.setAttribute('position', new THREE.BufferAttribute(dust, 3));
-const dustPts = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: '#3E8A66', size: 0.07, transparent: true, opacity: .7 }));
-scene.add(dustPts);
-
-// ---------------------------------------------------------------- stations
-const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
-const P = { github: V(-16, 0), webhook: V(-10.5, 0), facts: V(-5, 0), read: V(1, 3), rules: V(1, -3), fuse: V(6.5, 0), two: V(6.5, 6),
-            spam: V(13, 4.8), needs_changes: V(13, 1.6), needs_review: V(13, -1.6), fast_track: V(13, -4.8) };
-const stations = {};
-const glow = (hex, opacity = 1) => new THREE.MeshBasicMaterial({ color: hex, transparent: opacity < 1, opacity });
-function tag(text, sub, low) {
-  const el = document.createElement('div'); el.className = 'st' + (low ? ' low' : '');
+// ------------------------------------------------------------------ building blocks
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+function mesh(geo, mat, x = 0, y = 0, z = 0, parent = scene) {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m;
+}
+const rbox = (w, h, d, r = .12) => new RoundedBoxGeometry(w, h, d, 4, r);
+function tag(text, sub, dy = 0) {
+  const el = document.createElement('div'); el.className = 'tag';
   const b = document.createElement('b'); b.textContent = text; el.appendChild(b);
   if (sub) { const s = document.createElement('span'); s.textContent = sub; el.appendChild(s); }
-  return new CSS2DObject(el);
+  const o = new CSS2DObject(el); o.position.y = dy; return o;
 }
-function station(name, group, label, sub, low) {
-  group.position.copy(P[name]); scene.add(group);
-  group.add(tag(label, sub, low));
-  stations[name] = { group, pulse: 0, spin: 0.2 };
-  return stations[name];
+
+// the ground and the board
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.ShadowMaterial({ opacity: .1 }));
+catcher.rotation.x = -Math.PI / 2; catcher.position.y = -1.25; catcher.receiveShadow = true; scene.add(catcher);
+mesh(rbox(48, 1.4, 25, .7), matte(HEX.side, 1), -1, -.71, 0);
+mesh(rbox(47.2, .3, 24.2, .5), matte(HEX.board, 1), -1, -.05, 0);
+
+// ------------------------------------------------------------------ stations
+const S = {};  // name -> { group, pulse }
+function station(name, x, z, label, sub, labelY) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+  g.add(tag(label, sub, labelY));
+  return (S[name] = { group: g, pulse: 0 });
 }
-{ // GitHub: a portal ring where PRs arrive and labels land back
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.TorusGeometry(1.4, .07, 16, 96), glow(HEX.white)));
-  g.add(new THREE.Mesh(new THREE.CircleGeometry(1.32, 64), glow(HEX.idle, .08)));
-  const inner = new THREE.Mesh(new THREE.TorusGeometry(.9, .025, 8, 64), glow(HEX.idle, .6)); g.add(inner);
-  station('github', g, 'GitHub', 'PR opened · labels land back').spinner = inner;
+{ // GitHub: a little house where PRs come from, and where labels land
+  const s = station('github', -19, 0, 'GitHub', 'PR opened · labels land here', 3.7);
+  const g = s.group;
+  mesh(rbox(3.4, 2.2, 2.8, .25), matte(HEX.cream), 0, 1.1, 0, g);
+  mesh(rbox(3.8, .38, 3.2, .18), matte(HEX.green, .8), 0, 2.35, 0, g);
+  mesh(rbox(1.25, 1.35, .14, .1), matte('#3B4540'), 1.72, .78, 0, g).rotation.y = Math.PI / 2;
+  mesh(new THREE.CylinderGeometry(.05, .05, 1.6, 8), matte(HEX.woodDark), -1.2, 3.3, -.9, g);
+  s.flag = mesh(rbox(.8, .5, .06, .05), matte(HEX.sage), -.78, 3.85, -.9, g);
 }
-{ // Webhook: a square, signed gate
-  const g = new THREE.Group();
-  const frame = new THREE.Mesh(new THREE.TorusGeometry(1.5, .06, 8, 4), glow(HEX.idle)); frame.rotation.z = Math.PI / 4; g.add(frame);
-  const membrane = new THREE.Mesh(new THREE.PlaneGeometry(2.05, 2.05), glow(HEX.idle, .07)); g.add(membrane);
-  station('webhook', g, 'Webhook', 'HMAC-signed').membrane = membrane;
+{ // Webhook: an arch with a lock: only signed deliveries pass
+  const s = station('webhook', -13, 0, 'Webhook', 'HMAC-signed', 3.6);
+  const g = s.group;
+  mesh(rbox(.5, 2.7, .5, .12), matte(HEX.cream), 0, 1.35, -1.35, g);
+  mesh(rbox(.5, 2.7, .5, .12), matte(HEX.cream), 0, 1.35, 1.35, g);
+  mesh(rbox(.75, .5, 3.4, .18), matte(HEX.sage), 0, 2.85, 0, g);
+  mesh(rbox(.42, .38, .22, .08), matte(HEX.needs_review, .6), .3, 2.3, 0, g);
+  const shackle = mesh(new THREE.TorusGeometry(.13, .04, 8, 24, Math.PI), matte('#9A9387', .5), .3, 2.5, 0, g);
+  shackle.rotation.y = Math.PI / 2;
 }
-{ // Facts computed in code: a wireframe core with orbiting cubes
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: HEX.idle, wireframe: true })));
-  const sats = new THREE.Group();
-  for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(.22, .22, .22), glow(HEX.white)); const a = i / 6 * Math.PI * 2; c.position.set(Math.cos(a) * 1.7, Math.sin(a) * .5, Math.sin(a) * 1.7); sats.add(c); }
-  g.add(sats);
-  station('facts', g, 'Facts in code', 'age · PRs/24h · swarm · CONTRIBUTING').spinner = sats;
+{ // Facts: a desk where the facts are counted in code
+  const s = station('facts', -7.5, 0, 'Facts in code', 'age · PRs/24h · swarm · rules', 3.0);
+  const g = s.group;
+  mesh(rbox(3.6, .28, 2.4, .1), matte(HEX.wood, .8), 0, 1.0, 0, g);
+  for (const [x, z] of [[-1.5, -.9], [1.5, -.9], [-1.5, .9], [1.5, .9]]) mesh(new THREE.CylinderGeometry(.09, .09, 1, 10), matte(HEX.woodDark), x, .5, z, g);
+  s.blocks = [[-1.1, -.5, HEX.mint], [-.45, -.55, HEX.cream], [-.8, .35, HEX.sage], [1.15, .4, HEX.cream]].map(([x, z, c], i) => {
+    const b = mesh(rbox(.48, .48, .48, .1), matte(c), x, 1.38 + (i === 1 ? .48 : 0), z, g); b.userData.y = b.position.y; return b;
+  });
 }
 const QORDER = ['spam', 'ai_slop', 'injection', 'risky', 'needs_tests', 'claims_match', 'follows_rules', 'matches_issue'];
 const QGOOD = { claims_match: 1, follows_rules: 1, matches_issue: 1 };
-const bars = [];
-{ // OpenJev: a core with one bar per question, sized by its probability
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.SphereGeometry(.75, 32, 32), glow('#2F6B4F')));
-  g.add(new THREE.Mesh(new THREE.SphereGeometry(.95, 32, 32), glow(HEX.idle, .12)));
-  const ring = new THREE.Group();
+const pillars = [];
+{ // OpenJev: a dome ringed by one pillar per question, as tall as its probability
+  const s = station('read', 0, -4.8, 'OpenJev read', 'System One · one call · every answer a probability', 4.3);
+  const g = s.group;
+  mesh(new THREE.CylinderGeometry(2.7, 2.85, .5, 48), matte(HEX.cream), 0, .25, 0, g);
+  const dome = new THREE.MeshPhysicalMaterial({ color: HEX.mint, roughness: .35, clearcoat: .6, clearcoatRoughness: .4 });
+  mesh(new THREE.SphereGeometry(1.45, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), dome, 0, .5, 0, g);
+  mesh(new THREE.CylinderGeometry(.18, .18, .25, 16), matte(HEX.green), 0, 2.02, 0, g);
   QORDER.forEach((q, i) => {
-    const a = i / QORDER.length * Math.PI * 2;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(.2, 1, .2), glow(HEX.idle));
-    m.position.set(Math.cos(a) * 1.7, 0, Math.sin(a) * 1.7); m.scale.y = .08; m.userData = { target: .08, q };
-    ring.add(m); bars.push(m);
+    const a = i / QORDER.length * Math.PI * 2 + Math.PI / 8;
+    const geo = rbox(.34, 1, .34, .1); geo.translate(0, .5, 0);
+    const p = mesh(geo, matte(HEX.idle), Math.cos(a) * 2.2, .5, Math.sin(a) * 2.2, g);
+    p.scale.y = .12; p.userData = { q, target: .12 };
+    pillars.push(p);
   });
-  g.add(ring);
-  station('read', g, 'OpenJev read', 'System One · one call · every question a probability').spinner = ring;
 }
-const checks = [];
-{ // anti-slop: a ring of rule checks that light up as they pass or fail
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.OctahedronGeometry(.55, 0), glow(HEX.rules)));
-  const ring = new THREE.Group();
+const tiles = [];
+{ // anti-slop: a checklist board whose tiles flip as rules pass or fail
+  const s = station('rules', 0, 5.4, 'anti-slop rules', '34 rules · unmodified · read-only', 3.4);
+  const g = s.group;
+  const board = new THREE.Group(); board.position.set(0, 1.0, 0); board.rotation.x = -.55; g.add(board);
+  mesh(rbox(4.6, .26, 3.5, .14), matte(HEX.cream), 0, 0, 0, board);
+  mesh(new THREE.CylinderGeometry(.12, .16, 1.0, 12), matte(HEX.woodDark), 0, .5, .4, g);
   for (let i = 0; i < 19; i++) {
-    const a = i / 19 * Math.PI * 2;
-    const m = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 12), glow(HEX.grey));
-    m.position.set(Math.cos(a) * 1.6, 0, Math.sin(a) * 1.6); ring.add(m); checks.push(m);
+    const c = i % 5, r = Math.floor(i / 5);
+    const t = mesh(rbox(.66, .12, .62, .06), matte(HEX.tile), -1.64 + c * .82, .2, -1.17 + r * .78, board);
+    t.userData = { flip: 1, from: HEX.tile, to: HEX.tile }; tiles.push(t);
   }
-  g.add(ring);
-  station('rules', g, 'anti-slop rules', '34 rules · unmodified · read-only', true).spinner = ring;
 }
-{ // Final call: where the read and the rules meet
-  const g = new THREE.Group();
-  const core = new THREE.Mesh(new THREE.OctahedronGeometry(1.05, 0), new THREE.MeshStandardMaterial({ color: '#1d3a2c', emissive: '#2F6B4F', emissiveIntensity: 1.2, flatShading: true }));
-  g.add(core);
-  g.add(new THREE.Mesh(new THREE.OctahedronGeometry(1.35, 0), new THREE.MeshBasicMaterial({ color: HEX.idle, wireframe: true, transparent: true, opacity: .4 })));
-  station('fuse', g, 'Final call', 'read + rules · trusted authors').spinner = core;
+{ // Final call: a gazebo where the read and the rules meet
+  const s = station('fuse', 7.5, 0, 'Final call', 'read + rules · trusted authors', 4.5);
+  const g = s.group;
+  mesh(new THREE.CylinderGeometry(2.2, 2.35, .4, 6), matte(HEX.cream), 0, .2, 0, g);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(new THREE.CylinderGeometry(.11, .11, 2.0, 10), matte(HEX.cream), Math.cos(a) * 1.75, 1.4, Math.sin(a) * 1.75, g); }
+  s.roof = mesh(new THREE.ConeGeometry(2.55, 1.2, 6), matte(HEX.green, .8), 0, 3.0, 0, g);
+  mesh(new THREE.SphereGeometry(.16, 16, 16), matte(HEX.needs_review, .5), 0, 3.72, 0, g);
 }
-{ // System Two: only lights up when the read is unsure
-  const g = new THREE.Group();
-  const d = new THREE.Mesh(new THREE.DodecahedronGeometry(.85, 0), new THREE.MeshBasicMaterial({ color: '#8C95D6', wireframe: true }));
-  g.add(d);
-  station('two', g, 'System Two', 'open-weight chat LLM · only when unsure').spinner = d;
+{ // System Two: a slim tower, only visited when the read is unsure
+  const s = station('two', 7.5, -8.4, 'System Two', 'open-weight chat model · only when unsure', 5.0);
+  const g = s.group;
+  mesh(new THREE.CylinderGeometry(.62, .78, 3.6, 24), matte('#E4E2EE'), 0, 1.8, 0, g);
+  mesh(new THREE.CylinderGeometry(.85, .85, .22, 24), matte(HEX.injection, .7), 0, 3.7, 0, g);
+  s.lamp = mesh(new THREE.SphereGeometry(.34, 24, 24), new THREE.MeshStandardMaterial({ color: '#D9DCF5', emissive: HEX.injection, emissiveIntensity: 0, roughness: .4 }), 0, 4.1, 0, g);
 }
-const bins = {};
-for (const v of ['spam', 'needs_changes', 'needs_review', 'fast_track']) {
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(new THREE.TorusGeometry(1.15, .07, 12, 80), glow(HEX[v])));
-  g.add(new THREE.Mesh(new THREE.CircleGeometry(1.08, 64), glow(HEX[v], .1)));
-  g.position.copy(P[v]); scene.add(g);
-  const el = document.createElement('div'); el.className = 'bin';
+const BINS = { spam: -6.6, needs_changes: -2.2, needs_review: 2.2, fast_track: 6.6 };
+const trays = {};
+for (const [v, z] of Object.entries(BINS)) { // verdict trays: cards settle here
+  const g = new THREE.Group(); g.position.set(15.5, 0, z); scene.add(g);
+  mesh(rbox(3.4, .7, 3.4, .25), matte(HEX[v], .85), 0, .35, 0, g);
+  mesh(rbox(2.8, .3, 2.8, .2), matte('#FBF9F5'), 0, .62, 0, g);
+  const el = document.createElement('div'); el.className = 'count';
   const n = document.createElement('b'); n.textContent = '0'; n.style.color = HEX[v];
-  el.appendChild(n); el.appendChild(document.createTextNode(LABEL[v]));
-  g.add(new CSS2DObject(el));
-  bins[v] = { group: g, count: 0, el: n, pulse: 0 };
-  stations[v] = { group: g, pulse: 0, spin: 0 };
+  el.append(n, document.createTextNode(LABEL[v]));
+  const o = new CSS2DObject(el); o.position.set(0, 0, 1.6); g.add(o);
+  trays[v] = { group: g, n, count: 0, pulse: 0 };
+}
+{ // a few trees and stones, so it reads as a place rather than a chart
+  const trees = [[-22, -9.5, 1.1], [-20.4, 9.8, .9], [-3.6, -10.4, .8], [11.6, -10.6, 1], [21.4, 10.4, .95], [3.2, 10.6, .75], [21.6, -10.2, .85], [-11.5, 10.2, .8]];
+  for (const [x, z, k] of trees) {
+    mesh(new THREE.CylinderGeometry(.14 * k, .18 * k, .9 * k, 8), matte(HEX.trunk), x, .45 * k, z);
+    mesh(new THREE.ConeGeometry(.95 * k, 1.9 * k, 7), matte(HEX.leaf), x, 1.6 * k, z);
+    mesh(new THREE.ConeGeometry(.7 * k, 1.4 * k, 7), matte(HEX.leafDark), x, 2.4 * k, z);
+  }
+  for (const [x, z, k] of [[-16, 9, .5], [10.5, 9.8, .4], [-9.2, -10, .45], [18.8, -10.6, .35]]) {
+    const st = mesh(new THREE.DodecahedronGeometry(k, 0), matte(HEX.stone)); st.position.set(x, k * .6, z); st.scale.y = .6;
+  }
+  const pond = new THREE.Mesh(new THREE.CircleGeometry(1.8, 40), new THREE.MeshPhysicalMaterial({ color: '#BFD6DA', roughness: .15, clearcoat: 1 }));
+  pond.rotation.x = -Math.PI / 2; pond.scale.set(1.5, 1, 1); pond.position.set(-15.5, .12, -8.6); pond.receiveShadow = true; scene.add(pond);
 }
 
-// ---------------------------------------------------------------- the paths between stations
-const curve = (...pts) => new THREE.CatmullRomCurve3(pts);
-const SEG = {
-  in: curve(P.github, V(-13.2, .5), P.webhook),
-  fetch: curve(P.webhook, V(-7.8, -.4), P.facts),
-  toRead: curve(P.facts, V(-2.5, 2.2), P.read),
-  toRules: curve(P.facts, V(-2.5, -2.2), P.rules),
-  readOut: curve(P.read, V(4, 2.2), P.fuse),
-  rulesOut: curve(P.rules, V(4, -2.2), P.fuse),
-  toTwo: curve(P.fuse, V(7.6, 3), P.two),
-  fromTwo: curve(P.two, V(5.4, 3), P.fuse),
-  back: curve(V(13, 6.6), V(0, 11.5, -3), V(-16, 2.2)),
+// ------------------------------------------------------------------ roads and routes
+const H = .42;  // card height above the road
+const curve = pts => new THREE.CatmullRomCurve3(pts.map(p => V(...p)), false, 'centripetal');
+const DOCK = { github: [-17.1, H, 0], webhook: [-13, H, 0], facts: [-7.5, 1.38, 0], read: [0, 2.42, -4.8], rules: [0, 2.1, 5.4],
+               fuse: [7.5, .78, 0], two: [7.5, 4.62, -8.4] };
+const binDock = v => [15.5, .95, BINS[v]];
+const ROUTES = {
+  in: [DOCK.github, [-15, H, 0], DOCK.webhook],
+  fetch: [DOCK.webhook, [-10.2, H, 0], [-8.5, .9, 0], DOCK.facts],
+  toRead: [DOCK.facts, [-5.6, H, -1.6], [-3, H, -4.2], [-1.4, 1.7, -4.8], DOCK.read],
+  toRules: [DOCK.facts, [-5.6, H, 1.6], [-3, H, 4.6], [-1.3, 1.5, 5.4], DOCK.rules],
+  readOut: [DOCK.read, [1.4, 1.7, -4.8], [3.8, H, -3.6], [5.9, H, -1.2], DOCK.fuse],
+  rulesOut: [DOCK.rules, [1.3, 1.5, 5.4], [3.8, H, 4], [5.9, H, 1.2], DOCK.fuse],
+  toTwo: [DOCK.fuse, [7.9, H, -2.8], [7.6, H, -6.2], [7.5, 2.8, -7.8], DOCK.two],
+  fromTwo: [DOCK.two, [7.5, 2.8, -7.8], [7.1, H, -6.2], [7.1, H, -2.8], DOCK.fuse],
 };
-for (const v of Object.keys(bins)) SEG['to_' + v] = curve(P.fuse, V(9.8, P[v].y * .6), P[v]);
-for (const [name, c] of Object.entries(SEG)) {
-  const m = new THREE.Mesh(new THREE.TubeGeometry(c, 80, name === 'back' ? .02 : .035, 6), glow(name === 'back' ? '#7B86F0' : '#2F6B4F', name === 'back' ? .35 : .55));
-  scene.add(m);
+for (const v of Object.keys(BINS)) ROUTES['to_' + v] = [DOCK.fuse, [10, H, BINS[v] * .45], [13, H, BINS[v]], binDock(v)];
+const SEG = Object.fromEntries(Object.entries(ROUTES).map(([k, pts]) => [k, curve(pts)]));
+SEG.back = curve([[15.5, 2.6, 0], [9, 6.8, -9.4], [-6, 6.8, -9.4], [-15, 5.2, -3], [-17.6, 2.6, 0]]);
+
+// draw the roads as soft flat ribbons on the board, following each route's footprint
+const roadMat = matte(HEX.road, 1);
+for (const name of ['in', 'fetch', 'toRead', 'toRules', 'readOut', 'rulesOut', 'toTwo', ...Object.keys(BINS).map(v => 'to_' + v)]) {
+  const flat = curve(ROUTES[name].map(([x, , z]) => [x, .12, z]));
+  const road = new THREE.Mesh(new THREE.TubeGeometry(flat, 90, .42, 10), roadMat);
+  road.scale.y = .12; road.position.y = .1; road.receiveShadow = true; scene.add(road);
+}
+for (let i = 1; i < 24; i++) { // the return path: a dotted line through the air
+  const d = mesh(new THREE.SphereGeometry(.07, 8, 8), matte('#C9C4EA', .6)); d.position.copy(SEG.back.getPointAt(i / 24)); d.castShadow = false;
 }
 
-// ---------------------------------------------------------------- orbs: one per pull request
-const runs = new Map();
-const sphere = new THREE.SphereGeometry(.32, 24, 24);
-const sparkGeo = new THREE.SphereGeometry(.17, 16, 16);
-function mover(mesh) { return { mesh, queue: [], seg: null, t: 0, speed: 9, onArrive: null, home: null }; }
+// ------------------------------------------------------------------ cards: one per pull request
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const cardGeo = rbox(1.25, .26, .9, .1), stripeGeo = rbox(1.27, .07, .3, .04);
+function makeCard() {
+  const g = new THREE.Group();
+  mesh(cardGeo, matte('#FFFFFF', .7), 0, 0, 0, g);
+  const stripe = mesh(stripeGeo, matte(HEX.idle, .7), 0, .15, -.24, g);
+  g.scale.setScalar(.01); scene.add(g);
+  return { g, stripe };
+}
+function mover(obj) { return { obj, queue: [], seg: null, t: 0, dur: 1, home: null, then: null }; }
 function go(m, name, then) { m.queue.push({ name, then }); }
-function stepMover(m, dt) {
-  if (!m.seg && m.queue.length) { const next = m.queue.shift(); m.seg = SEG[next.name]; m.t = 0; m.then = next.then; m.len = m.seg.getLength(); }
+function step(m, dt, bob) {
+  if (!m.seg && m.queue.length) {
+    const n = m.queue.shift(); m.seg = SEG[n.name]; m.then = n.then; m.t = 0;
+    m.dur = Math.max(.7, m.seg.getLength() / 6.5);
+  }
+  const o = m.obj;
   if (m.seg) {
-    m.t = Math.min(1, m.t + dt * m.speed / m.len);
-    m.mesh.position.copy(m.seg.getPointAt(m.t));
+    m.t = Math.min(1, m.t + dt / m.dur);
+    const k = ease(m.t);
+    o.position.copy(m.seg.getPointAt(k));
+    const tan = m.seg.getTangentAt(Math.min(.999, k));
+    const yaw = Math.atan2(-tan.z, tan.x);
+    let d = yaw - o.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    o.rotation.y += d * Math.min(1, dt * 8);
     if (m.t >= 1) { m.home = m.seg.getPointAt(1).clone(); m.seg = null; if (m.then) m.then(); }
-  } else if (m.home) {  // waiting at a station: hover a little
-    const k = performance.now() / 1000 + m.mesh.id;
-    m.mesh.position.set(m.home.x + Math.cos(k * 2) * .35, m.home.y + Math.sin(k * 2.6) * .25, m.home.z + Math.sin(k * 2) * .35);
+  } else if (m.home && bob) {
+    const k = performance.now() / 1000 + o.id;
+    o.position.set(m.home.x, m.home.y + Math.sin(k * 2.2) * .06, m.home.z);
+    o.rotation.y += dt * .5;
   }
 }
-function orbLabel(text) {
-  const el = document.createElement('div'); el.className = 'orb';
+const runs = new Map();
+function chip(text) {
+  const el = document.createElement('div'); el.className = 'chip';
   const t = document.createElement('span'); t.textContent = text; el.appendChild(t);
   const v = document.createElement('i'); el.appendChild(v);
-  return { obj: new CSS2DObject(el), el, verdict: v };
+  return { obj: new CSS2DObject(el), el, title: t, verdict: v };
 }
 function newRun(e) {
-  const mesh = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: HEX.white }));
-  mesh.position.copy(P.github); mesh.scale.setScalar(.01); scene.add(mesh);
-  const lab = orbLabel(e.title || shortUrl(e.url)); mesh.add(lab.obj);
-  const run = { id: e.id, url: e.url, source: e.source, t0: e.t, events: [], title: e.title, orb: mover(mesh), label: lab, spark: null, born: performance.now() };
+  const card = makeCard();
+  card.g.position.set(...DOCK.github);
+  const label = chip(e.title || shortUrl(e.url)); card.g.add(label.obj);
+  const run = { id: e.id, url: e.url, source: e.source, t0: e.t, events: [], title: e.title, card, label, m: mover(card.g) };
   runs.set(e.id, run);
   return run;
 }
-function setOrb(run, key) {
-  run.orb.mesh.material.color.copy(COL[key] || COL.idle);
-  run.label.verdict.textContent = key === 'injection' ? 'injection' : (LABEL[key] || '');
-  run.label.verdict.style.color = HEX[key] || HEX.idle;
+function paint(run, key) {
+  run.card.stripe.material.color.set(HEX[key] || HEX.idle);
+  run.label.verdict.textContent = LABEL[key] || '';
+  run.label.verdict.style.color = HEX[key] || HEX.ink;
 }
 function settle(run, key, instant) {
-  const b = bins[key === 'injection' ? 'needs_review' : key] || bins.needs_review;
-  b.count++; b.el.textContent = b.count; b.pulse = 1;
-  const mesh = run ? run.orb.mesh : new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: COL[key] || COL.idle }));
-  if (!run) scene.add(mesh);
-  const i = b.count - 1, a = i * 2.4, r = .25 + Math.sqrt(i) * .22;
-  const spot = b.group.position.clone().add(V(Math.cos(a) * r, Math.sin(a) * r, .3));
-  mesh.scale.setScalar(.45);
-  if (run) { run.orb.home = null; run.orb.queue = []; run.orb.seg = null; run.settled = { spot, at: performance.now() }; }
-  else mesh.position.copy(spot);
-  if (run && !instant) setTimeout(() => run.label.obj.element.style.opacity = '0', 5000);
-  if (run && instant) { mesh.position.copy(spot); run.label.obj.element.style.display = 'none'; }
+  const v = key === 'injection' ? 'needs_review' : key;
+  const t = trays[v] || trays.needs_review;
+  t.count++; t.n.textContent = t.count; t.pulse = 1;
+  const i = (t.count - 1) % 9, layer = Math.floor((t.count - 1) / 9);
+  const spot = t.group.position.clone().add(V(((i % 3) - 1) * .85, .86 + layer * .3, (Math.floor(i / 3) - 1) * .78));
+  run.m.queue = []; run.m.seg = null; run.m.home = null;
+  run.settle = { spot, yaw: (Math.random() - .5) * .5 };
+  // the label renderer owns `display`, so hide labels through `visible`
+  if (instant) { run.card.g.position.copy(spot); run.card.g.scale.setScalar(.62); run.label.obj.visible = false; }
+  else setTimeout(() => { run.label.el.style.opacity = '0'; setTimeout(() => (run.label.obj.visible = false), 700); }, 4500);
 }
-const comets = [];
-function comet(color) {
-  const m = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color })); scene.add(m);
-  comets.push({ m, t: 0 });
+const envelopes = [];
+function envelope() {
+  const g = new THREE.Group();
+  mesh(rbox(.7, .1, .5, .05), matte('#FFFFFF', .6), 0, 0, 0, g);
+  mesh(rbox(.72, .03, .18, .02), matte(HEX.injection, .6), 0, .06, 0, g);
+  scene.add(g); envelopes.push({ g, t: 0 });
 }
+const sparkGeo = new THREE.SphereGeometry(.22, 20, 20);
 
-// ---------------------------------------------------------------- the events
+// ------------------------------------------------------------------ events from the server
 const counts = { all: 0, spam: 0, review: 0, fast: 0, inj: 0 };
-const modelMs = [];
 let focus = null, eventCount = 0;
 const shortUrl = u => (u || '').replace('https://github.com/', '').replace('/pull/', '#');
-const pulse = name => { if (stations[name]) stations[name].pulse = 1; };
+const pulse = name => { if (S[name]) S[name].pulse = 1; };
 
 function onStage(e, instant) {
   let run = runs.get(e.id);
   if (!run) { if (e.stage !== 'received' && instant) return; run = newRun(e); }
   run.events.push(e);
-  if (e.title) run.title = e.title;
-  const o = run.orb;
+  const m = run.m;
   switch (e.stage) {
-    case 'received': pulse('github'); if (!instant) { go(o, 'in', () => pulse('webhook')); } break;
-    case 'fetching': if (!instant) go(o, 'fetch', () => pulse('facts')); break;
-    case 'facts': run.facts = e; run.label.el.firstChild.textContent = (e.title || '').slice(0, 42); pulse('facts'); break;
+    case 'received': pulse('github'); if (!instant) go(m, 'in', () => pulse('webhook')); break;
+    case 'fetching': if (!instant) go(m, 'fetch', () => pulse('facts')); break;
+    case 'facts': run.facts = e; run.title = e.title; run.label.title.textContent = (e.title || '').slice(0, 40); pulse('facts'); break;
     case 'rules_start':
       if (!instant) {
-        run.spark = mover(new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({ color: HEX.rules })));
-        run.spark.mesh.position.copy(P.facts); scene.add(run.spark.mesh); run.spark.speed = 10;
-        go(run.spark, 'toRules', () => pulse('rules'));
+        const s = mesh(sparkGeo, matte(HEX.needs_review, .5)); s.position.set(...DOCK.facts);
+        run.spark = mover(s); go(run.spark, 'toRules', () => pulse('rules'));
       }
       break;
-    case 'read_start': if (!instant) go(o, 'toRead', () => pulse('read')); break;
-    case 'read_done':
-      run.read = e; if (e.server_ms) modelMs.push(e.server_ms);
-      setBars(e.probabilities); pulse('read');
-      if (!instant) { setOrb(run, verdictKey(e.verdict, e.flags)); go(o, 'readOut'); }
-      break;
+    case 'read_start': if (!instant) go(m, 'toRead', () => pulse('read')); break;
+    case 'read_done': run.read = e; setPillars(e.probabilities); pulse('read'); if (!instant) { paint(run, verdictKey(e.verdict, e.flags)); go(m, 'readOut'); } break;
     case 'rules_done':
-      run.rules = e; setChecks(e); pulse('rules');
+      run.rules = e; setTiles(e); pulse('rules');
       if (run.spark && !instant) {
-        run.spark.mesh.material.color.set((e.failed || 0) >= 2 ? HEX.spam : HEX.fast_track);
         const s = run.spark;
-        go(s, 'rulesOut', () => { scene.remove(s.mesh); pulse('fuse'); });
+        s.obj.material.color.set(e.result === 'skipped' || e.error ? HEX.idle : (e.failed || 0) >= 2 ? HEX.spam : HEX.fast_track);
+        go(s, 'rulesOut', () => { scene.remove(s.obj); pulse('fuse'); });
       }
       break;
-    case 'fused':
-      run.final = e; pulse('fuse');
-      if (!instant) setOrb(run, verdictKey(e.verdict, e.flags));
-      break;
-    case 'escalated': pulse('two'); if (!instant) go(o, 'toTwo', () => pulse('two')); break;
-    case 'second_opinion': run.second = e; if (!instant) go(o, 'fromTwo', () => pulse('fuse')); break;
+    case 'fused': run.final = e; pulse('fuse'); if (!instant) paint(run, verdictKey(e.verdict, e.flags)); break;
+    case 'escalated': pulse('two'); S.two.lit = 1; if (!instant) go(m, 'toTwo', () => pulse('two')); break;
+    case 'second_opinion': run.second = e; if (!instant) go(m, 'fromTwo', () => pulse('fuse')); break;
     case 'done': {
-      const item = e.item || {};
-      const key = verdictKey(item.verdict, item.flags);
-      run.done = e;
-      counts.all++;
+      const item = e.item || {}, key = verdictKey(item.verdict, item.flags);
+      run.done = e; counts.all++;
       if (key === 'spam') counts.spam++; else if (key === 'fast_track') counts.fast++; else counts.review++;
       if (key === 'injection') counts.inj++;
+      paint(run, key);
       if (instant) { settle(run, key, true); break; }
-      setOrb(run, key);
-      const binKey = key === 'injection' ? 'needs_review' : key;
-      go(o, 'to_' + binKey, () => { settle(run, key, false); if (e.applied) comet(HEX[key] || HEX.idle); });
+      go(m, 'to_' + (key === 'injection' ? 'needs_review' : key), () => { settle(run, key, false); if (e.applied) envelope(); });
       break;
     }
-    case 'failed': run.failed = e; run.orb.mesh.material.color.copy(COL.grey); run.label.verdict.textContent = 'error'; break;
+    case 'failed': run.failed = e; run.label.verdict.textContent = 'error'; run.label.verdict.style.color = HEX.spam; break;
   }
   if (!instant || e.stage === 'done') renderCounts();
   if (!instant && (e.stage === 'received' || run === focus)) { focus = run; renderPanel(); }
   logLine(e, run, instant);
 }
-
-function setBars(p) {
-  for (const b of bars) {
+function setPillars(p) {
+  for (const b of pillars) {
     const v = (p || {})[b.userData.q];
-    b.userData.target = v == null ? .05 : Math.max(.05, v * 2.4);
+    b.userData.target = v == null ? .12 : .15 + v * 2.2;
     const bad = QGOOD[b.userData.q] ? v != null && v < .4 : v > .6;
-    b.material.color.set(v == null ? HEX.grey : bad ? HEX.spam : HEX.fast_track);
+    b.material.color.set(v == null ? HEX.idle : bad ? HEX.spam : HEX.fast_track);
   }
 }
-function setChecks(e) {
-  const failed = e.error ? 0 : e.failed || 0, total = e.error || e.result === 'skipped' ? 0 : e.total || 19;
-  checks.forEach((c, i) => c.material.color.set(e.error || i >= total ? HEX.grey : i < failed ? HEX.spam : HEX.fast_track));
+function setTiles(e) {
+  const skipped = e.error || e.result === 'skipped', failed = skipped ? 0 : e.failed || 0, total = skipped ? 0 : e.total || 19;
+  tiles.forEach((t, i) => {
+    t.userData.from = '#' + t.material.color.getHexString();
+    t.userData.to = i >= total ? HEX.tile : i < failed ? HEX.spam : HEX.fast_track;
+    t.userData.flip = 0; t.userData.delay = i * .04;
+  });
 }
 
-// ---------------------------------------------------------------- HUD
+// ------------------------------------------------------------------ panels
 const $ = id => document.getElementById(id);
 function renderCounts() {
   $('nAll').textContent = counts.all; $('nSpam').textContent = counts.spam; $('nReview').textContent = counts.review;
   $('nFast').textContent = counts.fast; $('nInj').textContent = counts.inj;
 }
-function el(tag, cls, text, style) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; if (style) n.style.cssText = style; return n; }
+function el(tagName, cls, text, style) { const n = document.createElement(tagName); if (cls) n.className = cls; if (text != null) n.textContent = text; if (style) n.style.cssText = style; return n; }
+const tint = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
 function renderPanel() {
   const r = focus; if (!r) return;
   $('panelEmpty').style.display = 'none';
@@ -430,9 +496,9 @@ function renderPanel() {
               el('div', 'sub mono', (f.repo ? f.repo + '#' + f.number + ' · @' + f.author : shortUrl(r.url)) + ' · ' + r.source));
   const fin = r.done && r.done.item ? r.done.item : r.final;
   if (fin) {
-    const key = verdictKey(fin.verdict, fin.flags);
-    const pill = el('span', 'pill', key === 'injection' ? 'prompt-injection' : LABEL[key] || key, 'background:' + (HEX[key] || HEX.idle));
-    const row = el('div', null, null, 'display:flex;align-items:center;gap:8px;flex-wrap:wrap'); row.append(pill);
+    const key = verdictKey(fin.verdict, fin.flags), c = HEX[key] || HEX.ink;
+    const row = el('div', null, null, 'display:flex;align-items:center;gap:8px;flex-wrap:wrap');
+    row.append(el('span', 'verdict', LABEL[key] || key, 'background:' + tint(c, .16) + ';color:' + c));
     if (fin.spam_type) row.append(el('span', 'sub mono', fin.spam_type.replace(/_/g, '-')));
     if (r.done && r.done.labels && r.done.labels.length) row.append(el('span', 'sub mono', '→ ' + r.done.labels.join(', ')));
     body.append(row);
@@ -440,7 +506,7 @@ function renderPanel() {
   if (r.facts) {
     const g = el('div', 'facts');
     [['age', i.age_days == null ? '—' : i.age_days + 'd'], ['PRs/24h', i.prs_24h ?? '—'], ['swarm', i.swarm ?? 0], ['trusted', f.trusted ? 'yes' : 'no']]
-      .forEach(([k, v]) => { const d = el('div'); d.append(el('small', null, k), el('strong', 'mono', String(v))); g.append(d); });
+      .forEach(([k, v]) => { const d = el('div'); d.append(el('small', null, k), el('strong', null, String(v))); g.append(d); });
     body.append(el('div', 'kicker', 'Facts computed in code'), g);
   }
   if (r.read) {
@@ -448,83 +514,105 @@ function renderPanel() {
     const bs = el('div', 'bars');
     QORDER.filter(q => q in (r.read.probabilities || {})).forEach(q => {
       const v = r.read.probabilities[q], bad = QGOOD[q] ? v < .4 : v > .6;
-      const row = el('div', 'bar'); const tr = el('div', 'track'); const fl = el('div', 'fill', null, 'width:' + (v * 100) + '%;background:' + (bad ? HEX.spam : HEX.fast_track));
-      tr.append(fl); row.append(el('span', 'mono', q), tr, el('span', 'mono', v.toFixed(2))); bs.append(row);
+      const row = el('div', 'bar'), tr = el('div', 'track');
+      tr.append(el('div', 'fill', null, 'width:' + (v * 100) + '%;background:' + (bad ? HEX.spam : HEX.fast_track)));
+      row.append(el('span', 'mono', q), tr, el('span', 'mono', v.toFixed(2))); bs.append(row);
     });
     body.append(bs);
   }
   if (r.rules) {
-    body.append(el('div', 'kicker', r.rules.error ? 'anti-slop rules · unavailable' : r.rules.result === 'skipped' ? 'anti-slop rules · skipped: it exempts owners, members and collaborators' : 'anti-slop rules · ' + r.rules.failed + ' of ' + r.rules.total + ' failed'));
+    const skipped = r.rules.result === 'skipped';
+    body.append(el('div', 'kicker', r.rules.error ? 'anti-slop rules · unavailable' : skipped ? 'anti-slop rules · skipped: it exempts owners and members' : 'anti-slop rules · ' + r.rules.failed + ' of ' + r.rules.total + ' failed'));
     if (r.rules.checks && r.rules.checks.length) { const d = el('div', 'rules'); r.rules.checks.forEach(c => { const s = el('span', 'mono', c.name); s.title = c.why; d.append(s); }); body.append(d); }
   }
   if (r.second) body.append(el('div', 'kicker', 'System Two second opinion'), el('div', 'sub', r.second.text || r.second.verdict));
-  body.append(el('div', 'kicker', 'Timeline'));
   const tl = el('div', 'timeline mono');
-  r.events.forEach(ev => { const d = el('div'); d.append(el('span', null, '+' + Math.round((ev.t - r.t0) * 1000) + ' ms', 'color:var(--muted)'), el('span', null, ev.stage)); tl.append(d); });
+  r.events.forEach(ev => { const d = el('div'); d.append(el('span', null, '+' + Math.round((ev.t - r.t0) * 1000) + ' ms'), el('span', null, ev.stage)); tl.append(d); });
   body.append(tl);
 }
-const STAGE_COLOR = { received: HEX.white, read_done: HEX.idle, rules_done: HEX.rules, fused: '#fff', escalated: '#8C95D6', second_opinion: '#8C95D6', done: HEX.fast_track, failed: HEX.spam };
+const DOT = { received: '#8A8E95', facts: HEX.sage, read_done: HEX.green, rules_done: HEX.needs_review, fused: HEX.ink, escalated: HEX.injection,
+              second_opinion: HEX.injection, done: HEX.fast_track, failed: HEX.spam };
 function logLine(e, run, instant) {
   eventCount++; $('logCount').textContent = eventCount + ' events';
-  const ms = Math.round((e.t - run.t0) * 1000);
   let detail = '';
-  if (e.stage === 'received') detail = (e.title || shortUrl(e.url)) + ' (' + e.source + ')';
-  else if (e.stage === 'facts') detail = shortUrl(run.url) + ' · @' + e.author + ' · ' + (e.trusted ? 'trusted' : 'not trusted');
+  if (e.stage === 'received') detail = (e.title || shortUrl(e.url)) + ' · ' + e.source;
+  else if (e.stage === 'facts') detail = shortUrl(run.url) + ' · @' + e.author;
   else if (e.stage === 'read_done') detail = e.verdict + ' · p(spam) ' + (e.probabilities.spam ?? 0).toFixed(2) + ' · ' + Math.round(e.server_ms || 0) + ' ms model';
-  else if (e.stage === 'rules_done') detail = e.error ? 'unavailable' : e.result === 'skipped' ? 'skipped (author exempt in anti-slop)' : e.failed + '/' + e.total + ' failed ' + (e.checks || []).map(c => c.name).join(', ');
-  else if (e.stage === 'fused') detail = 'FINAL ' + e.verdict + (e.spam_type ? ' (' + e.spam_type + ')' : '') + (e.uncertain ? ' · unsure → System Two' : '');
-  else if (e.stage === 'done') detail = (e.labels && e.labels.length ? 'labels: ' + e.labels.join(', ') : 'read-only replay');
+  else if (e.stage === 'rules_done') detail = e.error ? 'unavailable' : e.result === 'skipped' ? 'skipped (author exempt)' : e.failed + '/' + e.total + ' failed';
+  else if (e.stage === 'fused') detail = e.verdict + (e.spam_type ? ' · ' + e.spam_type : '') + (e.uncertain ? ' · unsure' : '');
+  else if (e.stage === 'done') detail = e.labels && e.labels.length ? e.labels.join(', ') : 'read-only replay';
   else if (e.stage === 'failed') detail = e.error;
-  const line = el('div', null, null, 'color:' + (instant ? '#5b6a62' : STAGE_COLOR[e.stage] || '#8FA096'));
-  line.textContent = new Date(e.t * 1000).toLocaleTimeString() + '  +' + String(ms).padStart(6) + ' ms  ' + e.stage.padEnd(15) + ' ' + detail;
+  const line = el('div', instant ? 'old' : null);
+  line.append(el('i', null, null, 'background:' + (DOT[e.stage] || '#D7D4CC')),
+              el('span', null, new Date(e.t * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })),
+              el('span', null, '+' + Math.round((e.t - run.t0) * 1000)),
+              el('span', null, e.stage), el('span', null, detail));
   const log = $('log'); log.prepend(line);
-  while (log.children.length > 80) log.lastChild.remove();
+  while (log.children.length > 40) log.lastChild.remove();
 }
 
-// ---------------------------------------------------------------- live connection
+// ------------------------------------------------------------------ live connection
 function connect() {
   const es = new EventSource('/api/events');
   es.addEventListener('hello', ev => {
     $('dot').classList.add('on'); $('connText').textContent = 'live';
     const { backlog } = JSON.parse(ev.data);
-    const done = new Set(backlog.filter(e => e.stage === 'done' || e.stage === 'failed').map(e => e.id));
-    for (const e of backlog) onStage(e, done.has(e.id));
+    const finished = new Set(backlog.filter(e => e.stage === 'done' || e.stage === 'failed').map(e => e.id));
+    for (const e of backlog) onStage(e, finished.has(e.id));
   });
   es.addEventListener('stage', ev => onStage(JSON.parse(ev.data), false));
-  es.onerror = () => { $('dot').classList.remove('on'); $('connText').textContent = 'reconnecting…'; };
+  es.onerror = () => { $('dot').classList.remove('on'); $('connText').textContent = 'reconnecting'; };
 }
 connect();
 $('replay').onclick = () => fetch('/api/replay', { method: 'POST' });
-addEventListener('keydown', e => { if (e.key === 'r' && !e.metaKey && !e.ctrlKey) fetch('/api/replay', { method: 'POST' }); });
 
-// ---------------------------------------------------------------- frame loop
+// ------------------------------------------------------------------ frame loop
 const clock = new THREE.Clock();
 function frame() {
   const dt = Math.min(clock.getDelta(), .05), now = performance.now() / 1000;
-  for (const [name, s] of Object.entries(stations)) {
-    s.pulse = Math.max(0, s.pulse - dt * 1.4);
-    s.group.scale.setScalar(1 + s.pulse * .22);
-    if (s.spinner) s.spinner.rotation.y += dt * (.25 + s.pulse * 3);
-    if (s.membrane) s.membrane.material.opacity = .07 + s.pulse * .45;
+  for (const s of Object.values(S)) {
+    s.pulse = Math.max(0, s.pulse - dt * 1.6);
+    const k = Math.sin(s.pulse * Math.PI);  // a soft swell, not a flash
+    s.group.scale.set(1 + k * .05, 1 + k * .07, 1 + k * .05);
   }
-  for (const b of Object.values(bins)) { b.pulse = Math.max(0, b.pulse - dt * 1.2); b.group.scale.setScalar(1 + b.pulse * .2); }
-  for (const b of bars) b.scale.y += (b.userData.target - b.scale.y) * Math.min(1, dt * 6);
+  S.github.flag.rotation.y = Math.sin(now * 2.2) * .25;
+  S.facts.blocks.forEach((b, i) => { b.position.y = b.userData.y + Math.sin(S.facts.pulse * Math.PI) * (.25 + i * .05); });
+  S.fuse.roof.rotation.y += dt * (.15 + S.fuse.pulse * 1.5);
+  S.two.lit = Math.max(0, (S.two.lit || 0) - dt * .25);
+  S.two.lamp.material.emissiveIntensity = S.two.lit * .9;
+  for (const p of pillars) p.scale.y += (p.userData.target - p.scale.y) * Math.min(1, dt * 4);
+  for (const t of tiles) {
+    const u = t.userData;
+    if (u.flip < 1) {
+      u.delay -= dt; if (u.delay > 0) continue;
+      u.flip = Math.min(1, u.flip + dt * 2.6);
+      t.rotation.x = ease(u.flip) * Math.PI;
+      t.material.color.set(u.flip < .5 ? u.from : u.to);
+      if (u.flip >= 1) t.rotation.x = 0;
+    }
+  }
+  for (const t of Object.values(trays)) { t.pulse = Math.max(0, t.pulse - dt * 1.5); const k = Math.sin(t.pulse * Math.PI); t.group.scale.set(1 + k * .05, 1 + k * .12, 1 + k * .05); }
   for (const run of runs.values()) {
-    const m = run.orb.mesh;
-    if (m.scale.x < 1 && !run.settled) m.scale.setScalar(Math.min(1, m.scale.x + dt * 3));
-    if (run.settled) m.position.lerp(run.settled.spot, Math.min(1, dt * 5));
-    else stepMover(run.orb, dt);
-    if (run.spark) stepMover(run.spark, dt);
+    const g = run.card.g;
+    if (run.settle) {
+      g.position.lerp(run.settle.spot, Math.min(1, dt * 4));
+      g.rotation.y += (run.settle.yaw - g.rotation.y) * Math.min(1, dt * 4);
+      g.scale.setScalar(g.scale.x + (.62 - g.scale.x) * Math.min(1, dt * 4));
+    } else {
+      if (g.scale.x < 1) g.scale.setScalar(Math.min(1, g.scale.x + dt * 2.5));
+      step(run.m, dt, true);
+    }
+    if (run.spark) step(run.spark, dt, false);
   }
-  for (let i = comets.length - 1; i >= 0; i--) {
-    const c = comets[i]; c.t += dt * .55;
-    if (c.t >= 1) { scene.remove(c.m); comets.splice(i, 1); pulse('github'); continue; }
-    c.m.position.copy(SEG.back.getPointAt(c.t));
+  for (let i = envelopes.length - 1; i >= 0; i--) {
+    const e = envelopes[i]; e.t += dt / 3.2;
+    if (e.t >= 1) { scene.remove(e.g); envelopes.splice(i, 1); pulse('github'); continue; }
+    e.g.position.copy(SEG.back.getPointAt(ease(e.t)));
+    e.g.rotation.y = Math.sin(e.t * Math.PI * 2) * .3; e.g.rotation.z = Math.sin(e.t * Math.PI * 3) * .15;
   }
-  if (runs.size > 60) { const old = [...runs.values()].filter(r => r.settled).slice(0, runs.size - 60); old.forEach(r => { scene.remove(r.orb.mesh); runs.delete(r.id); }); }
-  dustPts.rotation.y = now * .01;
+  if (runs.size > 70) [...runs.values()].filter(r => r.settle).slice(0, runs.size - 70).forEach(r => { scene.remove(r.card.g); runs.delete(r.id); });
   controls.update();
-  composer.render(); css.render(scene, camera);
+  renderer.render(scene, camera); css.render(scene, camera);
   requestAnimationFrame(frame);
 }
 frame();
