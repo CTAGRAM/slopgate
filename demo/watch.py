@@ -49,8 +49,9 @@ def describe(e: dict) -> tuple[str, str]:
         return ("red" if e.get("failed", 0) >= 2 else "grn"), f"rules: {e.get('failed')}/{e.get('total')} failed {names}"
     if s == "fused":
         kind = f" ({e['spam_type']})" if e.get("spam_type") else ""
+        plain = f"\n{' ' * 46}{paint('dim', e['plain'])}" if e.get("plain") else ""
         return VERDICT.get(e["verdict"], "b"), paint("b", f"FINAL {e['verdict'].upper()}{kind}") + (
-            "  · unsure, escalating" if e.get("uncertain") else "")
+            "  · unsure, escalating" if e.get("uncertain") else "") + plain
     if s == "escalated":
         return "mag", "System Two: asking an open-weight chat model for a second opinion"
     if s == "second_opinion":
