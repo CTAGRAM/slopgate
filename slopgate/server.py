@@ -53,9 +53,10 @@ def index():
     return FileResponse(STATIC / "index.html")
 
 
-@app.get("/support.js")
-def support_js():
-    return FileResponse(STATIC / "support.js", media_type="text/javascript")
+@app.get("/dc-runtime.js")
+def dc_runtime():
+    # the dashboard's template runtime; a name like "support.js" gets caught by ad-blocker filter lists
+    return FileResponse(STATIC / "dc-runtime.js", media_type="text/javascript")
 
 
 @app.get("/api/dashboard")
