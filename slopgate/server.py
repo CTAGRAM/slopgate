@@ -24,7 +24,7 @@ from .events import Bus
 from .arena import FINAL, coderabbit_observed, contenders, final_opinion, run_safely
 from .github import _ts, parse_pr_url
 from .escalate import system_two
-from .judge import build_state, fact_values, facts, is_trusted
+from .judge import build_state, fact_values, facts, is_trusted, rules_needed
 from .pipeline import SlopGate, summary
 
 log = logging.getLogger("uvicorn.error")
@@ -179,10 +179,12 @@ def arena_stream(url: str):
                 o = done.result()
                 got[o.contender] = o
                 yield _sse("opinion", asdict(o))
-                if final and "SlopGate · OpenJev" in got and "anti-slop (34 rules)" in got and FINAL not in got:
-                    got[FINAL] = final_opinion(got["SlopGate · OpenJev"], got["anti-slop (34 rules)"],
-                                               is_trusted(pr, settings.judge_all_authors))
-                    yield _sse("opinion", asdict(got[FINAL]))
+                if final and FINAL not in got and "SlopGate · OpenJev" in got:
+                    read, trusted = got["SlopGate · OpenJev"], is_trusted(pr, settings.judge_all_authors)
+                    # the final call lands with the read when the rules can't change it, else with the rules
+                    if not rules_needed(read.verdict, trusted) or "anti-slop (34 rules)" in got:
+                        got[FINAL] = final_opinion(read, got.get("anti-slop (34 rules)"), trusted)
+                        yield _sse("opinion", asdict(got[FINAL]))
         yield _sse("done", {})
 
     return StreamingResponse(events(), media_type="text/event-stream",

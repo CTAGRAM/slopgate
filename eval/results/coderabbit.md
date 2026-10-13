@@ -2,7 +2,7 @@
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 25/25 | 100% | 92% | 0% | 100% | 4.2 s | 259 ms | 1617 |
+| SlopGate · final | Read + rules | 25/25 | 100% | 92% | 0% | 100% | 3.3 s | 259 ms | 1617 |
 | SlopGate · OpenJev | System One | 25/25 | 39% | 90% | 0% | 50% | 1.2 s | 259 ms | 1617 |
 | SlopGate · Clef-flash | System One | 25/25 | 17% | 80% | 17% | 50% | 897 ms | 107 ms | 2178 |
 | DiffusionGemma 26B as chat | Chat LLM | 24/25 | 18% | 100% | 5% | 0% | 1.1 s | 366 ms | 1370 |
@@ -13,7 +13,7 @@
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 74/74 | 57% | 92% | 2% | 6% | 3.7 s | 314 ms | 1979 |
+| SlopGate · final | Read + rules | 74/74 | 57% | 92% | 2% | 6% | 1.2 s | 314 ms | 1979 |
 | SlopGate · OpenJev | System One | 74/74 | 22% | 90% | 2% | 3% | 1.1 s | 314 ms | 1979 |
 | SlopGate · Clef-flash | System One | 74/74 | 10% | 80% | 30% | 3% | 899 ms | 134 ms | 2496 |
 | DiffusionGemma 26B as chat | Chat LLM | 73/74 | 26% | 100% | 23% | 0% | 1.2 s | 387 ms | 1740 |

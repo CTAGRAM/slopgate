@@ -8,7 +8,7 @@ from .escalate import second_opinion
 from .github import GitHub, PullRequest
 from .events import Emit, quiet
 from .plain import explain
-from .judge import Triage, apply_rules, classify_spam, fact_values, is_trusted, judge
+from .judge import Triage, apply_rules, classify_spam, fact_values, is_trusted, judge, rules_needed
 from .openjev import OpenJev
 
 
@@ -42,11 +42,15 @@ class SlopGate:
         r = t.reading
         emit("read_done", verdict=t.verdict, confidence=t.confidence, probabilities=t.probabilities,
              flags=list(t.flags), server_ms=r.server_ms, wall_ms=r.wall_ms, tokens=r.input_tokens, questions=len(r.answers))
-        try:
-            checked = rules.result(timeout=120) if rules else None
-        except Exception as e:  # noqa: BLE001 - without the rules, the read alone decides
-            checked = None
-            emit("rules_done", error=str(e)[:200])
+        if rules and not rules_needed(t.verdict, trusted):
+            # the rules can't change this call: don't wait for them (they finish in the background)
+            checked = rules.result() if rules.done() else None
+        else:
+            try:
+                checked = rules.result(timeout=120) if rules else None
+            except Exception as e:  # noqa: BLE001 - without the rules, the read alone decides
+                checked = None
+                emit("rules_done", error=str(e)[:200])
         t = classify_spam(apply_rules(t, checked, trusted), state, self.model)
         t.plain = explain(t.verdict, t.spam_type, t.flags, t.probabilities, fact_values(pr), t.rules, t.uncertain)
         emit("fused", verdict=t.verdict, flags=list(t.flags), spam_type=t.spam_type, uncertain=t.uncertain,

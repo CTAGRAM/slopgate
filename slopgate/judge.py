@@ -292,6 +292,12 @@ def fused_verdict(verdict: str, trusted: bool, rules_failed: int | None) -> str:
     return verdict
 
 
+def rules_needed(read_verdict: str | None, trusted: bool) -> bool:
+    """Whether anti-slop's rules can still change the call. They can only add spam, and they are ignored for
+    trusted authors, so when the read already says spam (or the author is trusted) there is nothing to wait for."""
+    return not trusted and read_verdict != "spam"
+
+
 def apply_rules(t: Triage, rules: dict | None, trusted: bool) -> Triage:
     t.rules = rules
     if not rules or rules.get("error"):

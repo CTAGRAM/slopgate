@@ -72,6 +72,9 @@ injection, swarms). The final call:
 
 > **Spam** when an author without a track record in the repo fails **2 or more** rule checks, or when the
 > read says spam. Otherwise the read's verdict stands. (`SLOPGATE_RULES_THRESHOLD` changes the 2.)
+>
+> The rules can only add spam, so when the read already says spam (or the author is trusted) the call is
+> made at once, without waiting for them.
 
 The scorecard lists every rule that failed and why.
 
@@ -143,7 +146,7 @@ never seen.
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 34/34 | 94% | 97% | 0% | 100% | 3.9 s | 238 ms | 1817 |
+| SlopGate · final | Read + rules | 34/34 | 94% | 97% | 0% | 100% | 2.3 s | 238 ms | 1817 |
 | SlopGate · OpenJev | System One | 34/34 | 52% | 100% | 3% | 0% | 1.8 s | 238 ms | 1817 |
 | SlopGate · Clef-flash | System One | 34/34 | 30% | 100% | 18% | 0% | 1.2 s | 136 ms | 2302 |
 | DiffusionGemma 26B as chat | Chat LLM | 34/34 | 36% | 100% | 27% | 0% | 1.2 s | 343 ms | 1571 |
@@ -154,7 +157,7 @@ never seen.
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 101/101 | 52% | 97% | 2% | 2% | 1.6 s | 214 ms | 1937 |
+| SlopGate · final | Read + rules | 101/101 | 52% | 97% | 2% | 2% | 1.2 s | 214 ms | 1937 |
 | SlopGate · OpenJev | System One | 101/101 | 28% | 100% | 3% | 0% | 1.2 s | 214 ms | 1937 |
 | SlopGate · Clef-flash | System One | 101/101 | 17% | 100% | 15% | 0% | 1.1 s | 127 ms | 2435 |
 | DiffusionGemma 26B as chat | Chat LLM | 98/101 | 22% | 93% | 29% | 2% | 1.2 s | 342 ms | 1683 |
@@ -191,7 +194,7 @@ How SlopGate got here, on the same 101 PRs:
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 25/25 | 100% | 92% | 0% | 100% | 4.2 s | 259 ms | 1617 |
+| SlopGate · final | Read + rules | 25/25 | 100% | 92% | 0% | 100% | 3.3 s | 259 ms | 1617 |
 | SlopGate · OpenJev | System One | 25/25 | 39% | 90% | 0% | 50% | 1.2 s | 259 ms | 1617 |
 | SlopGate · Clef-flash | System One | 25/25 | 17% | 80% | 17% | 50% | 897 ms | 107 ms | 2178 |
 | DiffusionGemma 26B as chat | Chat LLM | 24/25 | 18% | 100% | 5% | 0% | 1.1 s | 366 ms | 1370 |
@@ -202,7 +205,7 @@ How SlopGate got here, on the same 101 PRs:
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
-| SlopGate · final | Read + rules | 74/74 | 57% | 92% | 2% | 6% | 3.7 s | 314 ms | 1979 |
+| SlopGate · final | Read + rules | 74/74 | 57% | 92% | 2% | 6% | 1.2 s | 314 ms | 1979 |
 | SlopGate · OpenJev | System One | 74/74 | 22% | 90% | 2% | 3% | 1.1 s | 314 ms | 1979 |
 | SlopGate · Clef-flash | System One | 74/74 | 10% | 80% | 30% | 3% | 899 ms | 134 ms | 2496 |
 | DiffusionGemma 26B as chat | Chat LLM | 73/74 | 26% | 100% | 23% | 0% | 1.2 s | 387 ms | 1740 |
@@ -221,8 +224,9 @@ down first and compared on the main set only. "Untrusted author and enough faile
 says spam" won there, and 2 failed rules gave the best recall at the same false-alarm count, so 2 is the
 default. The held-out set confirmed it. (With 3, held out: 55% caught, 96% precision, 1 false alarm.)
 
-The price is time: anti-slop makes about 50 GitHub API calls per PR, so the final call takes a few
-seconds instead of a fraction of one. Still well ahead of CodeRabbit's minute or more.
+Speed: the rules can only add a spam verdict and never apply to trusted authors, so the final call waits
+for anti-slop (about 50 GitHub API calls per PR) only when the read hasn't already settled it. The median
+final call takes about 1.2 seconds, against CodeRabbit's minute or more.
 
 ### How the test works
 

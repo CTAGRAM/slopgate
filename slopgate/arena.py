@@ -19,7 +19,8 @@ import httpx
 
 from .config import Settings
 from .github import GitHub, PullRequest, _ts
-from .judge import VERDICTS, classify_spam, decide, fact_values, fused_verdict, is_trusted, questions, swarm_size
+from .judge import (VERDICTS, classify_spam, decide, fact_values, fused_verdict, is_trusted, questions,
+                    rules_needed, swarm_size)
 from .plain import explain
 from .openjev import OpenJev
 
@@ -169,27 +170,36 @@ def contenders(settings: Settings, gh: GitHub) -> list[Contender]:
 FINAL = "SlopGate · final"
 
 
-def final_opinion(read: Opinion, rules: Opinion, trusted: bool) -> Opinion:
+def final_opinion(read: Opinion, rules: Opinion | None, trusted: bool) -> Opinion:
     """SlopGate's real output: its read plus anti-slop's rules, through the same fused_verdict the webhook uses.
-    In production both run at once, so the time is the slower of the two."""
-    failed = None if rules.error or not rules.extra else rules.extra["failed"]
-    verdict = fused_verdict(read.verdict, trusted, failed) if read.verdict and not read.error else None
-    names = ", ".join(c["name"] for c in (rules.extra or {}).get("checks", []))
-    if failed is None:
-        detail = "rules unavailable"
-    elif not rules.extra["total"]:
-        detail = "rules skipped: anti-slop exempts the repo's owners, members and collaborators"
+    Both run at once. When the read already settles it, the final call is made at the read's time; otherwise
+    it waits for the rules, so its time is the slower of the two."""
+    needed = rules_needed(read.verdict, trusted)
+    usable = rules is not None and not rules.error and rules.extra
+    failed = rules.extra["failed"] if usable else None
+    verdict = fused_verdict(read.verdict, trusted, failed if needed else None) if read.verdict and not read.error else None
+    if not needed:
+        detail = ("decided by the read: the rules can only add spam" if read.verdict == "spam"
+                  else "decided by the read: trusted authors aren't judged by the rules")
+        seconds = read.seconds
     else:
-        detail = f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
+        names = ", ".join(c["name"] for c in rules.extra.get("checks", [])) if usable else ""
+        if not usable:
+            detail = "rules unavailable"
+        elif not rules.extra["total"]:
+            detail = "rules skipped: anti-slop exempts the repo's owners, members and collaborators"
+        else:
+            detail = f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
+        times = [x for x in (read.seconds, rules.seconds if rules else None) if x is not None]
+        seconds = max(times) if times else None
     detail += f"; read: {read.verdict}"
-    seconds = max(x for x in (read.seconds, rules.seconds) if x is not None) if read.seconds or rules.seconds else None
     x = read.extra or {}
     plain = explain(verdict, x.get("spam_type"), x.get("flags"), x.get("probabilities"), x.get("facts"),
-                    rules.extra if failed is not None else None,
+                    rules.extra if usable and needed else None,
                     x.get("uncertain") and verdict == read.verdict) if verdict else None
     return Opinion(FINAL, "Read + rules", verdict, read.p_spam, seconds, read.tokens, detail, read.error,
-                   read.model_seconds, {**x, "rules": rules.extra, "trusted": trusted,
-                                        "read_verdict": read.verdict, "plain": plain})
+                   read.model_seconds, {**x, "rules": rules.extra if rules else None, "rules_needed": needed,
+                                        "trusted": trusted, "read_verdict": read.verdict, "plain": plain})
 
 
 def run_safely(c: Contender, pr: PullRequest, state: str) -> Opinion:
