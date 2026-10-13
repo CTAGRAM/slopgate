@@ -2,15 +2,11 @@
 
 ## Before you go on stage
 
-1. Start the server and the webhook relay on the demo laptop:
-   ```bash
-   uv run slopgate serve
-   ```
-   ```bash
-   npx smee-client --url "$(grep SMEE_URL .env.local | cut -d= -f2)" --target http://localhost:8000/webhook
-   ```
-2. Open two browser tabs: the arena at `http://localhost:8000`, and
-   `https://github.com/CTAGRAM/slopgate-demo/pulls`.
+1. Wake the live deployment a few minutes early (free hosting sleeps when idle): open
+   https://slopgate.onrender.com and https://slopgate.onrender.com/sim, and keep the dashboard tab open.
+   The demo repo's webhook already points there.
+2. Open two more tabs: `https://github.com/CTAGRAM/slopgate-demo/pulls`, and a terminal running
+   `uv run python demo/watch.py https://slopgate.onrender.com`.
 3. On a **second laptop**, a teammate logs in to GitHub with **their own account** (`gh auth login`), so
    the demo PRs come from an outside contributor, not the repo owner. They clone this repo and keep a
    terminal ready at its root.

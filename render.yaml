@@ -1,0 +1,17 @@
+# One-click deploy: https://render.com/deploy?repo=https://github.com/CTAGRAM/slopgate
+services:
+  - type: web
+    name: slopgate
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /healthz
+    envVars:
+      - key: CODIV_API_KEY        # free at https://codiv.ai
+        sync: false
+      - key: GITHUB_TOKEN         # fine-grained: Pull requests + Issues read/write on your repos
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        generateValue: true
+      - key: PORT
+        value: "8080"

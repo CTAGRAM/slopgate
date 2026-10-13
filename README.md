@@ -9,6 +9,13 @@ of typed questions in a single call. In parallel it runs the open-source [anti-s
 gate knows the difference between *sure* and *guessing*. When it is unsure, it escalates to an
 open-weight LLM. It never closes anything: it labels, explains, and leaves the call to a human.
 
+**Live:** [slopgate.onrender.com](https://slopgate.onrender.com) (dashboard) ·
+[3D pipeline](https://slopgate.onrender.com/sim) · open a PR on
+[CTAGRAM/slopgate-demo](https://github.com/CTAGRAM/slopgate-demo) and watch it go through. (Free hosting
+sleeps when idle; the first visit can take up to a minute.)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/CTAGRAM/slopgate)
+
 ![The SlopGate scorecard on a pull request](docs/scorecard.png)
 
 ## Why
@@ -267,8 +274,9 @@ uv run slopgate triage https://github.com/OWNER/REPO/pull/123 --apply   # label 
 uv run slopgate compare https://github.com/OWNER/REPO/pull/123          # every judge, side by side
 ```
 
-**As a webhook server with the arena page**, on your machine or on DigitalOcean App Platform
-([`.do/app.yaml`](.do/app.yaml)):
+**As a webhook server with the dashboard**, on your machine, on Render ([`render.yaml`](render.yaml), the
+live demo), on DigitalOcean App Platform ([`.do/app.yaml`](.do/app.yaml)) or a Droplet over SSH
+([`deploy/deploy.sh`](deploy/deploy.sh)):
 
 ```bash
 uv run slopgate serve      # http://localhost:8000: arena, live gate feed, scoreboard
