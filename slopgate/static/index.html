@@ -97,7 +97,7 @@
       <div class="panel" id="feed"><div class="empty">Open a PR on the demo repo and it appears here within a second.</div></div>
     </section>
     <section>
-      <h2>Scoreboard · real pull requests</h2>
+      <h2>Scoreboard · held-out pull requests</h2>
       <div class="panel scroll" id="board"><div class="empty">Run <span class="num">eval/run.py</span> to fill this in.</div></div>
     </section>
   </div>
@@ -226,14 +226,15 @@ async function loadBoard() {
     if (!r) return;
     const pct = (v) => v == null ? "–" : `${Math.round(v * 100)}%`;
     const table = el("table");
-    const head = el("tr"); ["Judge", "Precision", "Recall", "False alarms", "Median time"].forEach((h) => head.append(el("th", null, h)));
+    const head = el("tr"); ["Judge", "Spam caught", "Precision", "Spam fast-tracked", "Median time"].forEach((h) => head.append(el("th", null, h)));
     table.append(head);
     for (const c of r.contenders) {
       const tr = el("tr");
-      [c.name, pct(c.precision), pct(c.recall), pct(c.fpr), fmt(c.median)].forEach((v, i) => tr.append(el("td", i ? "num" : null, v)));
+      [c.name, pct(c.recall), pct(c.precision), pct(c.waved), fmt(c.median)].forEach((v, i) => tr.append(el("td", i ? "num" : null, v)));
       table.append(tr);
     }
-    $("board").replaceChildren(table, el("div", "empty", `${r.n} real PRs: ${r.spam} labelled spam by maintainers, ${r.n - r.spam} merged from the same repos.`));
+    $("board").replaceChildren(table, el("div", "empty",
+      `Held out: ${r.n} real PRs that CodeRabbit reviewed, never used to build SlopGate. ${r.spam} labelled spam by maintainers, ${r.n - r.spam} merged from the same repos.`));
   } catch {}
 }
 loadBoard();

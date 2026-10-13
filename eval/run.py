@@ -112,13 +112,13 @@ def report(set_name: str, names: list[str], data) -> None:
     # upstream's labelling automation on their own PRs, not a maintainer's judgement.
     outside = [(pr, label) for pr, label in data if pr.author_association not in TRUSTED]
     top, scores = table("Outside contributors", names, folder, outside)
-    everyone, _ = table("Everyone", names, folder, data)
+    everyone, all_scores = table("Everyone", names, folder, data)
     lines = top + ["", *everyone]
     (RESULTS / f"{set_name}.md").write_text("\n".join(lines) + "\n")
     (RESULTS / f"{set_name}.urls.tsv").write_text("".join(f"{label}\t{pr.url}\n" for pr, label in data))
-    n_spam = sum(label == "spam" for _, label in outside)
+    summary = lambda rows, sc: {"n": len(rows), "spam": sum(label == "spam" for _, label in rows), "contenders": sc}
     (RESULTS / f"{set_name}.json").write_text(json.dumps(
-        {"n": len(outside), "spam": n_spam, "population": "outside contributors", "contenders": scores}, indent=2))
+        {"outside": summary(outside, scores), "everyone": summary(data, all_scores)}, indent=2))
     print("\n".join(lines))
 
 

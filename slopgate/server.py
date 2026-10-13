@@ -55,8 +55,9 @@ def feed():
 
 @app.get("/results")
 def results():
-    path = RESULTS / "prs.json"
-    return json.loads(path.read_text()) if path.exists() else None
+    """The held-out evaluation: PRs CodeRabbit reviewed, never used while building SlopGate."""
+    path = RESULTS / "coderabbit.json"
+    return json.loads(path.read_text())["everyone"] if path.exists() else None
 
 
 @lru_cache(maxsize=1)

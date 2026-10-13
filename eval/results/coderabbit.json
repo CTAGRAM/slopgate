@@ -1,59 +1,118 @@
 {
-  "n": 25,
-  "spam": 23,
-  "population": "outside contributors",
-  "contenders": [
-    {
-      "name": "SlopGate \u00b7 OpenJev",
-      "kind": "System One",
-      "judged": 25,
-      "total": 25,
-      "precision": 0.9,
-      "recall": 0.391304347826087,
-      "fpr": 0.5,
-      "waved": 0.0,
-      "median": 1.2013982920034323,
-      "median_model": 0.259,
-      "tokens": 1616.64
-    },
-    {
-      "name": "SlopGate \u00b7 Clef-flash",
-      "kind": "System One",
-      "judged": 25,
-      "total": 25,
-      "precision": 0.8,
-      "recall": 0.17391304347826086,
-      "fpr": 0.5,
-      "waved": 0.17391304347826086,
-      "median": 0.8966077080112882,
-      "median_model": 0.1072,
-      "tokens": 2177.76
-    },
-    {
-      "name": "DiffusionGemma 26B as chat",
-      "kind": "Chat LLM",
-      "judged": 24,
-      "total": 25,
-      "precision": 1.0,
-      "recall": 0.18181818181818182,
-      "fpr": 0.0,
-      "waved": 0.045454545454545456,
-      "median": 1.1463574789959239,
-      "median_model": 0.3662,
-      "tokens": 1369.5
-    },
-    {
-      "name": "CodeRabbit",
-      "kind": "Observed",
-      "judged": 17,
-      "total": 25,
-      "precision": 1.0,
-      "recall": 0.06666666666666667,
-      "fpr": 0.0,
-      "waved": null,
-      "median": 127.0,
-      "median_model": null,
-      "tokens": null
-    }
-  ]
+  "outside": {
+    "n": 25,
+    "spam": 23,
+    "contenders": [
+      {
+        "name": "SlopGate \u00b7 OpenJev",
+        "kind": "System One",
+        "judged": 25,
+        "total": 25,
+        "precision": 0.9,
+        "recall": 0.391304347826087,
+        "fpr": 0.5,
+        "waved": 0.0,
+        "median": 1.2013982920034323,
+        "median_model": 0.259,
+        "tokens": 1616.64
+      },
+      {
+        "name": "SlopGate \u00b7 Clef-flash",
+        "kind": "System One",
+        "judged": 25,
+        "total": 25,
+        "precision": 0.8,
+        "recall": 0.17391304347826086,
+        "fpr": 0.5,
+        "waved": 0.17391304347826086,
+        "median": 0.8966077080112882,
+        "median_model": 0.1072,
+        "tokens": 2177.76
+      },
+      {
+        "name": "DiffusionGemma 26B as chat",
+        "kind": "Chat LLM",
+        "judged": 24,
+        "total": 25,
+        "precision": 1.0,
+        "recall": 0.18181818181818182,
+        "fpr": 0.0,
+        "waved": 0.045454545454545456,
+        "median": 1.1463574789959239,
+        "median_model": 0.3662,
+        "tokens": 1369.5
+      },
+      {
+        "name": "CodeRabbit",
+        "kind": "Observed",
+        "judged": 17,
+        "total": 25,
+        "precision": 1.0,
+        "recall": 0.06666666666666667,
+        "fpr": 0.0,
+        "waved": null,
+        "median": 127.0,
+        "median_model": null,
+        "tokens": null
+      }
+    ]
+  },
+  "everyone": {
+    "n": 74,
+    "spam": 40,
+    "contenders": [
+      {
+        "name": "SlopGate \u00b7 OpenJev",
+        "kind": "System One",
+        "judged": 74,
+        "total": 74,
+        "precision": 0.9,
+        "recall": 0.225,
+        "fpr": 0.029411764705882353,
+        "waved": 0.025,
+        "median": 1.1139415420038858,
+        "median_model": 0.3145,
+        "tokens": 1979.3108108108108
+      },
+      {
+        "name": "SlopGate \u00b7 Clef-flash",
+        "kind": "System One",
+        "judged": 74,
+        "total": 74,
+        "precision": 0.8,
+        "recall": 0.1,
+        "fpr": 0.029411764705882353,
+        "waved": 0.3,
+        "median": 0.8988094585074577,
+        "median_model": 0.13445000000000001,
+        "tokens": 2496.3783783783783
+      },
+      {
+        "name": "DiffusionGemma 26B as chat",
+        "kind": "Chat LLM",
+        "judged": 73,
+        "total": 74,
+        "precision": 1.0,
+        "recall": 0.2564102564102564,
+        "fpr": 0.0,
+        "waved": 0.23076923076923078,
+        "median": 1.1592597080161795,
+        "median_model": 0.387,
+        "tokens": 1740.4931506849316
+      },
+      {
+        "name": "CodeRabbit",
+        "kind": "Observed",
+        "judged": 58,
+        "total": 74,
+        "precision": 1.0,
+        "recall": 0.034482758620689655,
+        "fpr": 0.0,
+        "waved": null,
+        "median": 75.5,
+        "median_model": null,
+        "tokens": null
+      }
+    ]
+  }
 }

@@ -61,6 +61,14 @@ repo's owners, members, collaborators or past contributors of spam. Their PRs st
 check, including prompt injection and risky files. Set `SLOPGATE_JUDGE_ALL_AUTHORS=1` to judge
 everyone (CodeRabbit's `include_all_authors`).
 
+## The arena
+
+`slopgate serve` also runs the arena: paste any PR and every judge answers side by side, live. Here,
+on a PR that sneaks `curl | bash` into CI and tells AI reviewers to approve it, SlopGate flags the
+prompt injection and the risky file; anti-slop waves it through because the repo owner opened it.
+
+![Every judge on one pull request](docs/arena.png)
+
 ## How it works
 
 ```mermaid
