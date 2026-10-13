@@ -124,7 +124,7 @@ def coderabbit_observed(gh: GitHub) -> Contender:
             if age < 1800:  # a fresh PR: CodeRabbit simply hasn't answered yet
                 return Opinion("CodeRabbit", "Observed", None, None, None, detail="still reviewing",
                                extra={"pending": True, "opened_at": pr.created_at.isoformat()})
-            return Opinion("CodeRabbit", "Observed", None, None, None, detail="not installed on this repo")
+            return Opinion("CodeRabbit", "Observed", None, None, None, detail="never reviewed this PR (not installed, or the PR predates it)")
         text = " ".join((c.get("body") or "") for c in comments + reviews).lower()
         first_review = min((_ts(r["submitted_at"]) for r in reviews), default=None)
         first_any = min([_ts(c["created_at"]) for c in comments] + ([first_review] if first_review else []))

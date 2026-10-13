@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Close the PRs that demo/flood.sh opened. Keeps #2-#6, the showcase PRs the dashboard links to.
+# Close the PRs that demo/flood.sh opened. Keeps #2-#6 and #20-#23, the showcase PRs the dashboard links to.
 # Closing only: branches and comments stay, so nothing is lost.
 set -euo pipefail
 REPO="${DEMO_REPO:-CTAGRAM/slopgate-demo}"
-keep=" 2 3 4 5 6 "
+keep=" 2 3 4 5 6 20 21 22 23 "
 gh pr list -R "$REPO" --state open --limit 200 --json number,headRefName \
   --jq '.[] | select(.headRefName | startswith("demo-")) | .number' |
   while read -r n; do
