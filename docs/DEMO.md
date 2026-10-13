@@ -60,6 +60,10 @@ you can point at your own GPU so no code leaves your infrastructure.
 
 ## Likely questions
 
+- **Why not just use anti-slop?** We do: SlopGate runs its 34 rules, unmodified, alongside the model
+  read and fuses the two. On 74 PRs neither had seen, the fused call caught 57% of spam at 92% precision;
+  anti-slop alone caught 48% at 63% and would have auto-closed 11 good, merged PRs. SlopGate closes nothing.
+
 - **Why not just ask an LLM?** We did, side by side. A chat model ranks PRs about as well once it gets
   SlopGate's facts, but it returns one self-reported number, sometimes malformed. SlopGate returns
   nine calibrated signals in one read that cannot go off-schema, and only calls an LLM when it is unsure.
