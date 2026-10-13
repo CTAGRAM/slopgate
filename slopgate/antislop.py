@@ -5,11 +5,12 @@ gets a real token. It talks to GitHub through a local proxy that forwards GET re
 token and refuses every write; the writes it tries are what we record as its verdict.
 
     git clone --depth 1 https://github.com/peakoss/anti-slop eval/vendor/anti-slop
-    uv run --with pyyaml python eval/antislop.py https://github.com/OWNER/REPO/pull/N
+    uv run python -m slopgate.antislop https://github.com/OWNER/REPO/pull/N
 """
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,12 +22,11 @@ from pathlib import Path
 import httpx
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from slopgate import config  # noqa: E402
-from slopgate.arena import Opinion  # noqa: E402
-from slopgate.github import PullRequest  # noqa: E402
+from . import config
+from .arena import Opinion
+from .github import PullRequest
 
-VENDOR = Path(__file__).parent / "vendor" / "anti-slop"
+VENDOR = Path(os.environ.get("ANTISLOP_DIR", Path(__file__).resolve().parents[1] / "eval" / "vendor" / "anti-slop"))
 NO_ACTIONS = {"close-pr": "false", "lock-pr": "false", "failure-pr-message": "",
               "failure-add-pr-labels": "", "failure-remove-pr-labels": "", "success-add-pr-labels": ""}
 
@@ -38,7 +38,21 @@ class ReadOnlyProxy:
         upstream = httpx.Client(base_url="https://api.github.com", timeout=30,
                                 headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"})
         self.blocked: list[str] = []
+        self.failures = 0  # rate limits and server errors: a run that hit any is not a fair result
+        gate = threading.Semaphore(4)  # anti-slop fires requests in bursts; GitHub punishes bursts
         proxy = self
+
+        def fetch(path: str) -> httpx.Response:
+            for attempt in range(4):
+                with gate:
+                    r = upstream.get(path)
+                limited = r.status_code == 429 or (r.status_code == 403 and "rate limit" in r.text.lower())
+                if not limited:
+                    break
+                time.sleep(int(r.headers.get("retry-after", 30 * (attempt + 1))))
+            if r.status_code == 429 or r.status_code >= 500 or (r.status_code == 403 and "rate limit" in r.text.lower()):
+                proxy.failures += 1
+            return r
 
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, *args):
@@ -52,7 +66,7 @@ class ReadOnlyProxy:
                 self.wfile.write(body)
 
             def do_GET(self):
-                r = upstream.get(self.path)
+                r = fetch(self.path)
                 self._reply(r.status_code, r.content, r.headers.get("content-type", "application/json"))
 
             def _refuse(self):
@@ -100,7 +114,7 @@ def contender(token: str):
     def run(pr: PullRequest, state: str) -> Opinion:
         pull = httpx.get(f"{proxy.url}/repos/{pr.owner}/{pr.repo}/pulls/{pr.number}").json()
         repo = httpx.get(f"{proxy.url}/repos/{pr.owner}/{pr.repo}").json()
-        before = len(proxy.blocked)
+        before, failures_before = len(proxy.blocked), proxy.failures
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             (tmp / "event.json").write_text(json.dumps(
@@ -121,14 +135,20 @@ def contender(token: str):
         detail = f"{out.get('failed-checks', '?')}/{out.get('total-checks', '?')} checks failed"
         if tried:
             detail += f"; would have: {', '.join(sorted({t.split()[0] for t in tried}))}"
+        failures = proxy.failures - failures_before
+        error = "no result" if result == "error" else f"{failures} GitHub API errors" if failures else None
         return Opinion("anti-slop (34 rules)", "Rules", "spam" if result == "failed" else "fast_track",
-                       None, seconds, None, f"{result}: {detail}", None if result != "error" else "no result")
+                       None, seconds, None, f"{result}: {detail}", error)
     run.label = "anti-slop (34 rules)"
     return run
 
 
+def available() -> bool:
+    return (VENDOR / "dist" / "index.mjs").exists() and shutil.which("node") is not None
+
+
 if __name__ == "__main__":
-    from slopgate.github import GitHub
+    from .github import GitHub
     settings = config.load()
     pr = GitHub(settings.github_token).pull_request(sys.argv[1])
     print(contender(settings.github_token)(pr, ""))

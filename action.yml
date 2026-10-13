@@ -1,0 +1,34 @@
+name: SlopGate
+description: Triage pull requests for spam, AI slop and prompt injection with an open-weight System One model, in about 100 ms.
+author: CTAGRAM
+branding:
+  icon: shield
+  color: green
+
+inputs:
+  codiv-api-key:
+    description: API key for api.codiv.ai (free at https://codiv.ai), or for your own OpenJev server.
+    required: true
+  github-token:
+    description: Token used to read the PR and to add labels and the scorecard comment.
+    default: ${{ github.token }}
+  model:
+    description: System One model id.
+    default: openjev-latest
+  base-url:
+    description: OpenJev-compatible server. Point it at your own GPU box to keep everything in-house.
+    default: https://api.codiv.ai
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v6
+    - shell: bash
+      env:
+        CODIV_API_KEY: ${{ inputs.codiv-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        SLOPGATE_MODEL: ${{ inputs.model }}
+        OPENJEV_BASE_URL: ${{ inputs.base-url }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+      # Reads the PR through the API only; the contributor's code is never checked out or run.
+      run: uvx --quiet --from "${{ github.action_path }}" slopgate triage "$PR_URL" --apply --no-escalate

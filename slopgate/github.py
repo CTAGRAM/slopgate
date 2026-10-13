@@ -20,6 +20,18 @@ def parse_pr_url(url: str) -> tuple[str, str, int]:
     return m.group(1), m.group(2), int(m.group(3))
 
 
+STOPWORDS = {"the", "and", "for", "with", "from", "this", "that", "fix", "fixes", "add", "adds", "update",
+             "when", "into", "not", "use", "feat", "chore", "docs"}
+
+
+def _words(title: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z0-9]+", title.lower()) if len(w) > 2 and w not in STOPWORDS}
+
+
+def _jaccard(a: set[str], b: set[str]) -> float:
+    return len(a & b) / len(a | b) if a and b else 0.0
+
+
 def _ts(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
 
@@ -41,6 +53,9 @@ class PullRequest:
     linked_issue: dict | None
     repo_labels: list[dict] = field(default_factory=list)
     contributing: str = ""
+    similar_recent: int | None = None  # near-identical PRs by other authors in the 48 h before this one
+    similar_authors: int | None = None
+    same_issue_prs: int | None = None  # other PRs that already reference the same linked issue
 
     @property
     def account_age_days(self) -> int | None:
@@ -89,6 +104,33 @@ class GitHub:
                     break
         return self._contributing[key]
 
+    def swarm(self, pr: "PullRequest", hours: int = 48) -> None:
+        """Fill in how many other people recently opened near-identical PRs, or PRs for the same issue.
+        Only PRs opened before this one count: that is all a gate would see when this one arrives."""
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        start = (pr.created_at - timedelta(hours=hours)).strftime(fmt)
+        end = pr.created_at.strftime(fmt)
+        try:
+            items = self._get("/search/issues", q=f"repo:{pr.owner}/{pr.repo} is:pr created:{start}..{end}", per_page=100)["items"]
+        except httpx.HTTPStatusError:
+            items = []
+        mine = _words(pr.title)
+        similar = [i for i in items if i["number"] != pr.number and i["user"]["login"] != pr.author
+                   and _jaccard(mine, _words(i["title"])) >= 0.4]
+        pr.similar_recent = len(similar)
+        pr.similar_authors = len({i["user"]["login"] for i in similar})
+        if pr.linked_issue:
+            try:
+                events = self._get(f"/repos/{pr.owner}/{pr.repo}/issues/{pr.linked_issue['number']}/timeline", per_page=100)
+            except httpx.HTTPStatusError:
+                events = []
+            others = {e["source"]["issue"]["number"] for e in events
+                      if e.get("event") == "cross-referenced" and "pull_request" in e.get("source", {}).get("issue", {})
+                      and e["source"]["issue"]["number"] != pr.number
+                      and _ts(e["created_at"]) <= pr.created_at
+                      and e["source"]["issue"]["user"]["login"] != pr.author}
+            pr.same_issue_prs = len(others)
+
     def prs_in_window(self, author: str, end: datetime, hours: int = 24) -> int | None:
         """How many PRs the author opened anywhere on GitHub in the hours before `end`."""
         start = end - timedelta(hours=hours)
@@ -125,7 +167,7 @@ class GitHub:
             except httpx.HTTPStatusError:
                 pass
 
-        return PullRequest(
+        result = PullRequest(
             owner=owner, repo=repo, number=number, url=pr["html_url"],
             title=pr["title"], body=body, author=author,
             author_association=pr.get("author_association", "NONE"),
@@ -136,6 +178,8 @@ class GitHub:
             repo_labels=self.repo_labels(owner, repo),
             contributing=self.contributing(owner, repo),
         )
+        self.swarm(result)
+        return result
 
     # --- writes -----------------------------------------------------------------
 

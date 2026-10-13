@@ -93,6 +93,11 @@ def facts(pr: PullRequest) -> list[str]:
         out.append("The diff only changes whitespace.")
     if any(pr.author.lower() in line.lower() for line in added):
         out.append("The diff adds the author's own username to the project.")
+    if pr.similar_recent:
+        out.append(f"Other pull requests opened in this repository in the 48 hours before this one with a "
+                   f"near-identical title: {pr.similar_recent}, by {pr.similar_authors} other author(s).")
+    if pr.same_issue_prs:
+        out.append(f"Other people's pull requests that already reference the same issue: {pr.same_issue_prs}.")
     return out
 
 
@@ -158,7 +163,12 @@ def questions(pr: PullRequest) -> dict:
 # --- verdict ------------------------------------------------------------------------
 
 
-def decide(reading: Reading) -> Triage:
+def swarm_size(pr: PullRequest) -> int:
+    """How many other people were already working on the same thing when this PR arrived."""
+    return max(pr.similar_authors or 0, pr.same_issue_prs or 0)
+
+
+def decide(reading: Reading, swarm: int = 0) -> Triage:
     a = reading.answers
     probs = {k: v["noul"] for k, v in a.items() if v["type"] == "noul"}
     verdict, confidence = a["verdict"]["choice"], a["verdict"]["confidence"]
@@ -178,6 +188,10 @@ def decide(reading: Reading) -> Triage:
         verdict = "needs_review"
         flags.append("off_issue")
         notes.append("The diff does not seem to do what the linked issue asks.")
+    if swarm >= 2 and verdict == "fast_track":
+        verdict = "needs_review"
+        flags.append("swarm")
+        notes.append(f"{swarm} other people were already working on the same thing when this PR arrived.")
     if verdict == "fast_track" and probs["claims_match"] < 0.3:
         verdict = "needs_review"
         notes.append("The diff does not seem to do what the PR claims.")
@@ -199,4 +213,4 @@ def decide(reading: Reading) -> Triage:
 
 def judge(pr: PullRequest, model: OpenJev) -> tuple[str, Triage]:
     state = build_state(pr)
-    return state, decide(model.ask(state, questions(pr)))
+    return state, decide(model.ask(state, questions(pr)), swarm_size(pr))

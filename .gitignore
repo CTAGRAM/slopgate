@@ -4,5 +4,5 @@ __pycache__/
 .venv/
 *.pyc
 eval/data/
-eval/results/
+eval/results/*.old.jsonl
 eval/vendor/

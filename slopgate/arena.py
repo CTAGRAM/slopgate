@@ -18,7 +18,7 @@ import httpx
 
 from .config import Settings
 from .github import GitHub, PullRequest, _ts
-from .judge import VERDICTS, decide, questions
+from .judge import VERDICTS, decide, questions, swarm_size
 from .openjev import OpenJev
 
 
@@ -32,6 +32,7 @@ class Opinion:
     tokens: int | None = None
     detail: str = ""
     error: str | None = None
+    model_seconds: float | None = None  # the model's own time, when the server reports it
 
 
 Contender = Callable[[PullRequest, str], Opinion]
@@ -41,11 +42,13 @@ def system_one(settings: Settings, model_id: str, name: str) -> Contender:
     model = OpenJev(settings.openjev_url, settings.openjev_key, model_id)
 
     def run(pr: PullRequest, state: str) -> Opinion:
-        t = decide(model.ask(state, questions(pr)))
+        t = decide(model.ask(state, questions(pr)), swarm_size(pr))
         r = t.reading
+        flags = f", flags: {', '.join(t.flags)}" if t.flags else ""
         return Opinion(name, "System One", t.verdict, t.probabilities["spam"], r.wall_ms / 1000,
-                       r.input_tokens, f"{t.confidence:.0%} confident, server {r.server_ms:.0f} ms")
-    run.label = name
+                       r.input_tokens, f"{t.confidence:.0%} confident{flags}",
+                       model_seconds=r.server_ms / 1000 if r.server_ms else None)
+    run.label, run.kind_hint = name, "System One"
     return run
 
 
@@ -83,9 +86,11 @@ def chat_llm(base_url: str, api_key: str, model: str, name: str) -> Contender:
             answer = {}
         verdict = answer.get("verdict") if answer.get("verdict") in VERDICTS else None
         p = answer.get("p_spam")
+        server = re.search(r"total;dur=([\d.]+)", r.headers.get("server-timing", ""))
         return Opinion(name, "Chat LLM", verdict, float(p) if isinstance(p, (int, float)) else None,
                        seconds, tokens, str(answer.get("reason") or text[:160]),
-                       None if verdict else "reply was not valid JSON")
+                       None if verdict else "reply was not valid JSON",
+                       model_seconds=float(server.group(1)) / 1000 if server else None)
     run.label = name
     return run
 
@@ -138,14 +143,19 @@ def contenders(settings: Settings, gh: GitHub) -> list[Contender]:
         out.append(chat_llm(settings.gradient_url, settings.gradient_key, settings.gradient_model,
                             f"{settings.gradient_model} as chat (DO Gradient)"))
     out.append(coderabbit_observed(gh))
+    from . import antislop  # imported late: it builds on Opinion from this module
+    if antislop.available():
+        out.append(antislop.contender(settings.github_token))
     return out
 
 
+def run_safely(c: Contender, pr: PullRequest, state: str) -> Opinion:
+    try:
+        return c(pr, state)
+    except Exception as e:  # noqa: BLE001 - one broken contender must not sink the rest
+        return Opinion(getattr(c, "label", "contender"), "?", None, None, None, error=str(e)[:200])
+
+
 def compare(pr: PullRequest, state: str, field: list[Contender]) -> list[Opinion]:
-    def safe(c: Contender) -> Opinion:
-        try:
-            return c(pr, state)
-        except Exception as e:  # noqa: BLE001 - one broken contender must not sink the rest
-            return Opinion(getattr(c, "label", "contender"), "?", None, None, None, error=str(e)[:200])
     with ThreadPoolExecutor(len(field)) as pool:
-        return list(pool.map(safe, field))
+        return list(pool.map(lambda c: run_safely(c, pr, state), field))

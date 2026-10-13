@@ -1,0 +1,30 @@
+# DigitalOcean App Platform: doctl apps create --spec .do/app.yaml
+# Set the SECRET values in the control panel (or in a local copy of this file) before creating.
+name: slopgate
+region: nyc
+services:
+  - name: web
+    dockerfile_path: Dockerfile
+    git:
+      repo_clone_url: https://github.com/CTAGRAM/slopgate.git
+      branch: main
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /healthz
+    envs:
+      - key: CODIV_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: GITHUB_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      - key: GITHUB_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: GRADIENT_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: GRADIENT_MODEL
+        scope: RUN_TIME

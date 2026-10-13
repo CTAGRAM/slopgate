@@ -5,6 +5,8 @@ cannot win by telling docs repos from code repos. Bots and deleted accounts are 
 a deleted account would leak the answer.
 
     uv run python eval/collect.py --per-class 60
+    uv run python eval/collect.py --per-class 40 --commenter "coderabbitai[bot]" --out coderabbit
+    uv run python eval/collect.py --urls eval/results/prs.urls.tsv --out prs   # rebuild our exact set
 """
 
 import argparse
@@ -19,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from slopgate import config  # noqa: E402
 from slopgate.github import GitHub  # noqa: E402
 
-OUT = Path(__file__).parent / "data" / "prs.jsonl"
+DATA = Path(__file__).parent / "data"
 SEARCH_PAUSE = 2.2  # the search API allows 30 requests a minute
 
 
@@ -41,11 +43,22 @@ def main() -> None:
     ap.add_argument("--per-class", type=int, default=60)
     ap.add_argument("--per-repo", type=int, default=3)
     ap.add_argument("--since", default="2025-01-01")
+    ap.add_argument("--commenter", help="only PRs this account commented on, e.g. coderabbitai[bot]")
+    ap.add_argument("--out", default="prs", help="writes eval/data/<out>.jsonl")
+    ap.add_argument("--urls", help="a label<TAB>url file to fetch instead of searching")
     args = ap.parse_args()
     gh = GitHub(config.load().github_token)
+    out = DATA / f"{args.out}.jsonl"
+    extra = f" commenter:{args.commenter}" if args.commenter else ""
+
+    if args.urls:
+        pairs = [line.split("\t") for line in Path(args.urls).read_text().splitlines() if line.strip()]
+        spam = [(url, None) for label, url in pairs if label == "spam"]
+        merged = [(url, None) for label, url in pairs if label != "spam"]
+        return write(gh, out, spam, merged)
 
     spam, per_repo = [], Counter()
-    for item in search(gh, f"is:pr label:spam created:>={args.since}", pages=5):
+    for item in search(gh, f"is:pr label:spam created:>={args.since}{extra}", pages=5):
         repo = item["repository_url"].split("/repos/")[1]
         if human(item) and per_repo[repo] < args.per_repo:
             spam.append((item["html_url"], repo))
@@ -55,16 +68,21 @@ def main() -> None:
 
     merged = []
     for repo, n in per_repo.items():
-        for item in search(gh, f"repo:{repo} is:pr is:merged -label:spam created:>={args.since}"):
+        for item in search(gh, f"repo:{repo} is:pr is:merged -label:spam created:>={args.since}{extra}"):
             if human(item) and n > 0:
                 merged.append((item["html_url"], repo))
                 n -= 1
         if len(merged) >= args.per_class:
             break
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    done = {json.loads(l)["url"] for l in OUT.read_text().splitlines()} if OUT.exists() else set()
-    with OUT.open("a") as f:
+    write(gh, out, spam, merged)
+    print(f"repos={len(per_repo)}")
+
+
+def write(gh: GitHub, out: Path, spam: list, merged: list) -> None:
+    out.parent.mkdir(parents=True, exist_ok=True)
+    done = {json.loads(l)["url"] for l in out.read_text().splitlines()} if out.exists() else set()
+    with out.open("a") as f:
         for label, rows in (("spam", spam), ("merged", merged)):
             for url, repo in rows:
                 if url in done:
@@ -81,7 +99,7 @@ def main() -> None:
                 f.write(json.dumps(row, default=str) + "\n")
                 f.flush()
                 print(f"{label:6} {url}")
-    print(f"spam={len(spam)} merged={len(merged)} repos={len(per_repo)} -> {OUT}")
+    print(f"spam={len(spam)} merged={len(merged)} -> {out}")
 
 
 if __name__ == "__main__":
