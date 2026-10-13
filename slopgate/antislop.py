@@ -155,7 +155,8 @@ def contender(token: str):
 
     def run(pr: PullRequest, state: str) -> Opinion:
         r = rules.check(pr)
-        detail = f"{r['result']}: {r['failed']}/{r['total']} checks failed"
+        detail = (f"{r['result']}: {r['failed']}/{r['total']} checks failed" if r["total"]
+                  else "skipped: the author is exempt (owner, member or collaborator)")
         if r["blocked_writes"]:
             detail += f"; would have: {', '.join(sorted({t.split()[0] for t in r['blocked_writes']}))}"
         return Opinion("anti-slop (34 rules)", "Rules", "spam" if r["result"] == "failed" else "fast_track",

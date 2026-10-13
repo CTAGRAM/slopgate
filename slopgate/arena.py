@@ -175,8 +175,13 @@ def final_opinion(read: Opinion, rules: Opinion, trusted: bool) -> Opinion:
     failed = None if rules.error or not rules.extra else rules.extra["failed"]
     verdict = fused_verdict(read.verdict, trusted, failed) if read.verdict and not read.error else None
     names = ", ".join(c["name"] for c in (rules.extra or {}).get("checks", []))
-    detail = (f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
-              if failed is not None else "rules unavailable") + f"; read: {read.verdict}"
+    if failed is None:
+        detail = "rules unavailable"
+    elif not rules.extra["total"]:
+        detail = "rules skipped: anti-slop exempts the repo's owners, members and collaborators"
+    else:
+        detail = f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
+    detail += f"; read: {read.verdict}"
     seconds = max(x for x in (read.seconds, rules.seconds) if x is not None) if read.seconds or rules.seconds else None
     x = read.extra or {}
     plain = explain(verdict, x.get("spam_type"), x.get("flags"), x.get("probabilities"), x.get("facts"),
