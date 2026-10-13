@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 eval/data/
 eval/results/
+eval/vendor/

@@ -1,42 +1,34 @@
-"""Score SlopGate on eval/data/prs.jsonl and write eval/results/summary.md.
+"""Every contender on every PR in eval/data/<set>.jsonl, then eval/results/<set>.md.
 
-    uv run python eval/run.py --models openjev-latest clef-flash-1.0
+    uv run --with pyyaml python eval/run.py                 # all contenders
+    uv run --with pyyaml python eval/run.py --skip anti-slop
+
+SlopGate's questions and verdict rules were written before this dataset was collected.
 """
 
 import argparse
+import dataclasses
 import json
 import statistics
 import sys
-import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from slopgate import config  # noqa: E402
-from slopgate.github import PullRequest  # noqa: E402
-from slopgate.judge import judge  # noqa: E402
-from slopgate.openjev import OpenJev  # noqa: E402
+from slopgate.arena import compare, contenders  # noqa: E402
+from slopgate.github import GitHub, PullRequest  # noqa: E402
+from slopgate.judge import build_state  # noqa: E402
 
-DATA = Path(__file__).parent / "data" / "prs.jsonl"
+DATA = Path(__file__).parent / "data"
 RESULTS = Path(__file__).parent / "results"
-MIN_GAP = 1.05  # seconds between request starts: Codiv allows 60 a minute per key
-
-_lock, _last = threading.Lock(), [0.0]
+GAP = 3.2  # seconds per PR: three Codiv calls each, and Codiv allows 60 a minute
 
 
-def throttle() -> None:
-    with _lock:
-        wait = _last[0] + MIN_GAP - time.monotonic()
-        if wait > 0:
-            time.sleep(wait)
-        _last[0] = time.monotonic()
-
-
-def load() -> list[tuple[PullRequest, str]]:
+def load(name: str) -> list[tuple[PullRequest, str]]:
     rows = []
-    for line in DATA.read_text().splitlines():
+    for line in (DATA / f"{name}.jsonl").read_text().splitlines():
         d = json.loads(line)
         label = d.pop("label")
         for k in ("created_at", "account_created_at"):
@@ -45,77 +37,80 @@ def load() -> list[tuple[PullRequest, str]]:
     return rows
 
 
-def auc(pos: list[float], neg: list[float]) -> float:
-    """Probability a random spam PR scores higher than a random merged one."""
-    wins = sum(1.0 if p > n else 0.5 if p == n else 0.0 for p in pos for n in neg)
-    return wins / (len(pos) * len(neg))
+def when(sec: float | None) -> str:
+    if sec is None:
+        return "-"
+    return f"{sec * 1000:.0f} ms" if sec < 1 else f"{sec:.1f} s" if sec < 120 else f"{sec / 60:.1f} min"
 
 
-def evaluate(model_id: str, rows) -> dict:
-    s = config.load()
-    model = OpenJev(s.openjev_url, s.openjev_key, model_id)
-
-    def one(item):
-        pr, label = item
-        throttle()
-        try:
-            _, t = judge(pr, model)
-        except Exception as e:  # noqa: BLE001
-            return {"url": pr.url, "label": label, "error": str(e)}
-        return {"url": pr.url, "label": label, "verdict": t.verdict, "p_spam": t.probabilities["spam"],
-                "p_slop": t.probabilities["ai_slop"], "confidence": t.confidence,
-                "server_ms": t.reading.server_ms, "tokens": t.reading.input_tokens}
-
-    with ThreadPoolExecutor(4) as pool:
-        out = list(pool.map(one, rows))
-    RESULTS.mkdir(exist_ok=True)
-    (RESULTS / f"{model_id}.jsonl").write_text("\n".join(json.dumps(r) for r in out) + "\n")
-
-    ok = [r for r in out if "error" not in r]
-    tp = sum(r["label"] == "spam" and r["verdict"] == "spam" for r in ok)
-    fp = sum(r["label"] != "spam" and r["verdict"] == "spam" for r in ok)
-    fn = sum(r["label"] == "spam" and r["verdict"] != "spam" for r in ok)
-    merged = sum(r["label"] != "spam" for r in ok)
-    lat = sorted(r["server_ms"] for r in ok if r["server_ms"])
+def score(name: str, rows: list[dict]) -> dict:
+    mine = [(r["label"], o) for r in rows for o in r["opinions"] if o["contender"] == name]
+    judged = [(label, o) for label, o in mine if o["verdict"] and not o["error"]]
+    tp = sum(l == "spam" and o["verdict"] == "spam" for l, o in judged)
+    fp = sum(l != "spam" and o["verdict"] == "spam" for l, o in judged)
+    fn = sum(l == "spam" and o["verdict"] != "spam" for l, o in judged)
+    n_merged = sum(l != "spam" for l, _ in judged)
+    times = [o["seconds"] for _, o in judged if o["seconds"] is not None]
+    tokens = [o["tokens"] for _, o in judged if o["tokens"]]
     return {
-        "model": model_id, "n": len(ok), "errors": len(out) - len(ok),
-        "precision": tp / (tp + fp) if tp + fp else 0.0,
-        "recall": tp / (tp + fn) if tp + fn else 0.0,
-        "false_positive_rate": fp / merged if merged else 0.0,
-        "auc": auc([r["p_spam"] for r in ok if r["label"] == "spam"],
-                   [r["p_spam"] for r in ok if r["label"] != "spam"]),
-        "p50_ms": statistics.median(lat) if lat else None,
-        "p95_ms": lat[int(0.95 * (len(lat) - 1))] if lat else None,
-        "tokens_per_pr": statistics.mean(r["tokens"] for r in ok) if ok else 0,
-        "false_positives": [r["url"] for r in ok if r["label"] != "spam" and r["verdict"] == "spam"],
-        "missed": [r["url"] for r in ok if r["label"] == "spam" and r["verdict"] != "spam"],
+        "name": name, "kind": next((o["kind"] for _, o in mine), "?"),
+        "coverage": f"{len(judged)}/{len(mine)}",
+        "precision": tp / (tp + fp) if tp + fp else None,
+        "recall": tp / (tp + fn) if tp + fn else None,
+        "fpr": fp / n_merged if n_merged else None,
+        "median": statistics.median(times) if times else None,
+        "tokens": statistics.mean(tokens) if tokens else None,
     }
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--models", nargs="+", default=["openjev-latest"])
+    ap.add_argument("--set", default="prs", help="eval/data/<set>.jsonl")
+    ap.add_argument("--skip", nargs="*", default=[], help="contenders to leave out, by name prefix")
     args = ap.parse_args()
-    rows = load()
-    n_spam = sum(label == "spam" for _, label in rows)
-    print(f"{len(rows)} PRs: {n_spam} labelled spam, {len(rows) - n_spam} merged")
 
-    results = [evaluate(m, rows) for m in args.models]
+    settings = config.load()
+    gh = GitHub(settings.github_token)
+    field = contenders(settings, gh)
+    if not any("anti-slop".startswith(s) for s in args.skip):
+        import antislop
+        field.append(antislop.contender(settings.github_token))
+    field = [c for c in field if not any(c.label.lower().startswith(s.lower()) for s in args.skip)]
+
+    data = load(args.set)
+    RESULTS.mkdir(exist_ok=True)
+    out = RESULTS / f"{args.set}.jsonl"
+    done = {json.loads(l)["url"]: json.loads(l) for l in out.read_text().splitlines()} if out.exists() else {}
+    rows = []
+    with out.open("a") as f:
+        for i, (pr, label) in enumerate(data, 1):
+            if pr.url in done:
+                rows.append(done[pr.url])
+                continue
+            start = time.monotonic()
+            opinions = compare(pr, build_state(pr), field)
+            row = {"url": pr.url, "label": label, "opinions": [dataclasses.asdict(o) for o in opinions]}
+            f.write(json.dumps(row) + "\n")
+            f.flush()
+            rows.append(row)
+            print(f"[{i}/{len(data)}] {label:6} " + "  ".join(f"{o.contender.split(' ')[-1]}={o.verdict}" for o in opinions))
+            time.sleep(max(0.0, GAP - (time.monotonic() - start)))
+
+    n_spam = sum(r["label"] == "spam" for r in rows)
+    pct = lambda v: "-" if v is None else f"{v:.0%}"
     lines = [
-        f"Evaluated on {len(rows)} real pull requests: {n_spam} that maintainers labelled `spam`, "
-        f"and {len(rows) - n_spam} merged PRs from the same repositories.",
+        f"**{len(rows)} real pull requests**: {n_spam} that maintainers labelled `spam`, and "
+        f"{len(rows) - n_spam} merged PRs from the same repositories.",
         "",
-        "| Model | Precision | Recall | False alarms on merged PRs | AUC | p50 | p95 | Tokens / PR |",
+        "| Contender | Kind | Judged | Precision | Recall | False alarms on merged PRs | Median time | Tokens / PR |",
         "|---|---|---|---|---|---|---|---|",
     ]
-    for r in results:
-        lines.append(f"| `{r['model']}` | {r['precision']:.0%} | {r['recall']:.0%} | {r['false_positive_rate']:.0%} | "
-                     f"{r['auc']:.2f} | {r['p50_ms']:.0f} ms | {r['p95_ms']:.0f} ms | {r['tokens_per_pr']:.0f} |")
-    for r in results:
-        lines += ["", f"**{r['model']}**: {r['errors']} errors.",
-                  "False positives: " + (", ".join(r["false_positives"]) or "none"),
-                  "", "Missed spam: " + (", ".join(r["missed"]) or "none")]
-    (RESULTS / "summary.md").write_text("\n".join(lines) + "\n")
+    for c in field:
+        s = score(c.label, rows)
+        tokens = "-" if s["tokens"] is None else f"{s['tokens']:.0f}"
+        lines.append(f"| {s['name']} | {s['kind']} | {s['coverage']} | {pct(s['precision'])} | {pct(s['recall'])} | "
+                     f"{pct(s['fpr'])} | {when(s['median'])} | {tokens} |")
+    (RESULTS / f"{args.set}.md").write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 

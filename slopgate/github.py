@@ -1,6 +1,7 @@
 """What SlopGate reads from (and writes to) GitHub, as plain REST calls."""
 
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -39,6 +40,7 @@ class PullRequest:
     prs_in_prior_24h: int | None
     linked_issue: dict | None
     repo_labels: list[dict] = field(default_factory=list)
+    contributing: str = ""
 
     @property
     def account_age_days(self) -> int | None:
@@ -54,9 +56,18 @@ class GitHub:
             headers["Authorization"] = f"Bearer {token}"
         self._http = httpx.Client(base_url="https://api.github.com", headers=headers, timeout=30)
         self._labels: dict[str, list[dict]] = {}
+        self._contributing: dict[str, str] = {}
 
     def _get(self, path: str, **params):
-        r = self._http.get(path, params=params)
+        for attempt in range(5):
+            r = self._http.get(path, params=params)
+            limited = r.status_code == 429 or (r.status_code == 403 and "rate limit" in r.text.lower())
+            if not limited or attempt == 4:
+                break
+            # primary limits say when they reset; secondary limits only say "wait a few minutes"
+            reset = r.headers.get("retry-after") or (
+                max(1, int(r.headers["x-ratelimit-reset"]) - int(time.time())) if r.headers.get("x-ratelimit-remaining") == "0" else 60)
+            time.sleep(min(int(reset), 300))
         r.raise_for_status()
         return r.json()
 
@@ -65,6 +76,18 @@ class GitHub:
         if key not in self._labels:
             self._labels[key] = self._get(f"/repos/{key}/labels", per_page=100)
         return self._labels[key]
+
+    def contributing(self, owner: str, repo: str) -> str:
+        """The repo's CONTRIBUTING guide, so PRs are judged against the project's own rules."""
+        key = f"{owner}/{repo}"
+        if key not in self._contributing:
+            self._contributing[key] = ""
+            for path in ("CONTRIBUTING.md", ".github/CONTRIBUTING.md", "docs/CONTRIBUTING.md"):
+                r = self._http.get(f"/repos/{key}/contents/{path}", headers={"Accept": "application/vnd.github.raw"})
+                if r.status_code == 200:
+                    self._contributing[key] = r.text
+                    break
+        return self._contributing[key]
 
     def prs_in_window(self, author: str, end: datetime, hours: int = 24) -> int | None:
         """How many PRs the author opened anywhere on GitHub in the hours before `end`."""
@@ -111,6 +134,7 @@ class GitHub:
             prs_in_prior_24h=self.prs_in_window(author, created),
             linked_issue=linked,
             repo_labels=self.repo_labels(owner, repo),
+            contributing=self.contributing(owner, repo),
         )
 
     # --- writes -----------------------------------------------------------------

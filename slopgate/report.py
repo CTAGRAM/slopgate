@@ -33,6 +33,9 @@ def comment(t: Triage, linked_issue: int | None = None) -> str:
     if "matches_issue" in t.probabilities:
         p = t.probabilities["matches_issue"]
         rows.append(f"| Does what issue #{linked_issue} asks | `{_bar(p)}` {p:.0%} |")
+    if "follows_rules" in t.probabilities:
+        p = t.probabilities["follows_rules"]
+        rows.append(f"| Follows this repo's CONTRIBUTING rules | `{_bar(p)}` {p:.0%} |")
     rows.append(f"| Effort shown | {EFFORT[min(3, round(t.effort))]} ({t.effort:.1f} / 3) |")
     if t.area:
         rows.append(f"| Area | `{t.area}` |")

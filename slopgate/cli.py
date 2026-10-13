@@ -16,6 +16,9 @@ def main(argv: list[str] | None = None) -> None:
     t.add_argument("--json", action="store_true", help="print machine-readable output")
     t.add_argument("--model", help="System One model id (default: SLOPGATE_MODEL or openjev-latest)")
     t.add_argument("--no-escalate", action="store_true", help="never ask the System Two LLM")
+    c = sub.add_parser("compare", help="judge one PR with every contender, side by side")
+    c.add_argument("url")
+    c.add_argument("--json", action="store_true")
     s = sub.add_parser("serve", help="run the GitHub webhook server")
     s.add_argument("--host", default="0.0.0.0")
     s.add_argument("--port", type=int, default=8000)
@@ -24,6 +27,9 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "serve":
         import uvicorn
         uvicorn.run("slopgate.server:app", host=args.host, port=args.port)
+        return
+    if args.cmd == "compare":
+        _compare(args.url, args.json)
         return
 
     from .pipeline import SlopGate, summary
@@ -39,6 +45,32 @@ def main(argv: list[str] | None = None) -> None:
         print(json.dumps(summary(pr, triage), indent=2))
     else:
         print(report.comment(triage, pr.linked_issue["number"] if pr.linked_issue else None))
+
+
+def _compare(url: str, as_json: bool) -> None:
+    from .arena import compare, contenders
+    from .github import GitHub
+    from .judge import build_state
+
+    settings = config.load()
+    gh = GitHub(settings.github_token)
+    pr = gh.pull_request(url)
+    opinions = compare(pr, build_state(pr), contenders(settings, gh))
+    if as_json:
+        print(json.dumps([dataclasses.asdict(o) for o in opinions], indent=2))
+        return
+
+    def when(sec: float | None) -> str:
+        if sec is None:
+            return "-"
+        return f"{sec * 1000:.0f} ms" if sec < 1 else f"{sec:.1f} s" if sec < 120 else f"{sec / 60:.1f} min"
+
+    print(f"{pr.url}\n{pr.title}\n")
+    print(f"{'Contender':34} {'Kind':11} {'Verdict':14} {'P(spam)':>7} {'Time':>9} {'Tokens':>7}  Notes")
+    for o in opinions:
+        p = f"{o.p_spam:.2f}" if o.p_spam is not None else "-"
+        print(f"{o.contender:34} {o.kind:11} {(o.verdict or '-'):14} {p:>7} {when(o.seconds):>9} "
+              f"{(o.tokens or '-')!s:>7}  {o.error or o.detail}")
 
 
 if __name__ == "__main__":

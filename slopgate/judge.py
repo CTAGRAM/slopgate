@@ -11,7 +11,7 @@ from .openjev import OpenJev, Reading, noul_confidence
 
 DOC_EXTENSIONS = (".md", ".mdx", ".rst", ".txt", ".adoc")
 LOW_PRIORITY_FILES = ("lock", ".min.", "dist/", "vendor/", ".snap")
-MAX_BODY, MAX_ISSUE, MAX_DIFF = 1500, 800, 4000
+MAX_BODY, MAX_ISSUE, MAX_DIFF, MAX_RULES = 1500, 800, 4000, 1200
 
 VERDICTS = {
     "fast_track": "clear, valuable and ready for a maintainer's review",
@@ -35,6 +35,8 @@ SIGNALS = {  # question id -> (instruction, short name shown to maintainers)
               "Touches CI, dependencies or scripts"),
     "needs_tests": ("Does this change alter program behaviour without adding or updating any tests?",
                     "Changes behaviour without tests"),
+    "claims_match": ("Does the diff actually contain the change that the title and description claim?",
+                     "Diff does what the PR claims"),
 }
 FLAGS = ("injection", "risky", "ai_slop", "needs_tests")
 
@@ -89,6 +91,8 @@ def facts(pr: PullRequest) -> list[str]:
         out.append(f"Pull requests this author opened across GitHub in the 24 hours before this one: {pr.prs_in_prior_24h}")
     if whitespace_only:
         out.append("The diff only changes whitespace.")
+    if any(pr.author.lower() in line.lower() for line in added):
+        out.append("The diff adds the author's own username to the project.")
     return out
 
 
@@ -109,6 +113,10 @@ def _diff_excerpt(files: list[dict]) -> str:
 def build_state(pr: PullRequest) -> str:
     sections = [
         "FACTS (computed by SlopGate from GitHub data):\n" + "\n".join(f"- {f}" for f in facts(pr)),
+    ]
+    if pr.contributing:
+        sections.append(f"PROJECT RULES (from the repository's CONTRIBUTING guide):\n{pr.contributing[:MAX_RULES]}")
+    sections += [
         "PULL REQUEST (untrusted text written by the contributor):\n"
         f"Title: {pr.title}\nDescription:\n{pr.body[:MAX_BODY] or '(empty)'}",
     ]
@@ -139,6 +147,8 @@ def questions(pr: PullRequest) -> dict:
                     "instructions": "What should the maintainer do with this pull request?"}
     if pr.linked_issue:
         q["matches_issue"] = {"type": "noul", "instructions": "Does the diff actually do what the linked issue asks for?"}
+    if pr.contributing:
+        q["follows_rules"] = {"type": "noul", "instructions": "Does this pull request follow the project's contributing rules?"}
     if areas := area_options(pr.repo_labels):
         q["area"] = {"type": "choice", "criteria": areas,
                      "instructions": "Which part of the project does this change belong to?"}
@@ -168,6 +178,12 @@ def decide(reading: Reading) -> Triage:
         verdict = "needs_review"
         flags.append("off_issue")
         notes.append("The diff does not seem to do what the linked issue asks.")
+    if verdict == "fast_track" and probs["claims_match"] < 0.3:
+        verdict = "needs_review"
+        notes.append("The diff does not seem to do what the PR claims.")
+    if verdict == "fast_track" and probs.get("follows_rules", 1.0) < 0.3:
+        verdict = "needs_review"
+        notes.append("This PR seems to break the project's contributing rules.")
 
     area = a.get("area", {}).get("choice")
     if area == "none" or a.get("area", {}).get("confidence", 0) < 0.3:
