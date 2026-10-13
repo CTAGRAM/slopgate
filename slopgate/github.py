@@ -53,6 +53,7 @@ class PullRequest:
     linked_issue: dict | None
     repo_labels: list[dict] = field(default_factory=list)
     contributing: str = ""
+    pr_template: str = ""
     similar_recent: int | None = None  # near-identical PRs by other authors in the 48 h before this one
     similar_authors: int | None = None
     same_issue_prs: int | None = None  # other PRs that already reference the same linked issue
@@ -72,6 +73,7 @@ class GitHub:
         self._http = httpx.Client(base_url="https://api.github.com", headers=headers, timeout=30)
         self._labels: dict[str, list[dict]] = {}
         self._contributing: dict[str, str] = {}
+        self._templates: dict[str, str] = {}
 
     def _get(self, path: str, **params):
         for attempt in range(5):
@@ -91,6 +93,19 @@ class GitHub:
         if key not in self._labels:
             self._labels[key] = self._get(f"/repos/{key}/labels", per_page=100)
         return self._labels[key]
+
+    def pr_template(self, owner: str, repo: str) -> str:
+        """The repo's pull request template: its HTML comments are the maintainers' words, not the contributor's."""
+        key = f"{owner}/{repo}"
+        if key not in self._templates:
+            self._templates[key] = ""
+            for path in (".github/pull_request_template.md", ".github/PULL_REQUEST_TEMPLATE.md",
+                         "PULL_REQUEST_TEMPLATE.md", "docs/pull_request_template.md"):
+                r = self._http.get(f"/repos/{key}/contents/{path}", headers={"Accept": "application/vnd.github.raw"})
+                if r.status_code == 200:
+                    self._templates[key] = r.text
+                    break
+        return self._templates[key]
 
     def contributing(self, owner: str, repo: str) -> str:
         """The repo's CONTRIBUTING guide, so PRs are judged against the project's own rules."""
@@ -177,6 +192,7 @@ class GitHub:
             linked_issue=linked,
             repo_labels=self.repo_labels(owner, repo),
             contributing=self.contributing(owner, repo),
+            pr_template=self.pr_template(owner, repo),
         )
         self.swarm(result)
         return result

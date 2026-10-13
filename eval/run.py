@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from slopgate import config  # noqa: E402
 from slopgate.arena import contenders, run_safely  # noqa: E402
 from slopgate.github import GitHub, PullRequest  # noqa: E402
-from slopgate.judge import build_state  # noqa: E402
+from slopgate.judge import TRUSTED, build_state  # noqa: E402
 
 DATA = Path(__file__).parent / "data"
 RESULTS = Path(__file__).parent / "results"
@@ -84,15 +84,15 @@ def score(name: str, rows: list[dict]) -> dict:
     }
 
 
-def report(set_name: str, names: list[str], data) -> None:
-    folder = RESULTS / set_name
+def table(title: str, names: list[str], folder: Path, data) -> tuple[list[str], list[dict]]:
+    urls = {pr.url for pr, _ in data}
     n_spam = sum(label == "spam" for _, label in data)
-    scores = [score(n, list(answers(folder, n).values())) for n in names]
+    scores = [score(n, [r for r in answers(folder, n).values() if r["url"] in urls]) for n in names]
     scores = [s for s in scores if s["total"]]
     pct = lambda v: "-" if v is None else f"{v:.0%}"
     lines = [
-        f"**{len(data)} real pull requests from {len({(p.owner, p.repo) for p, _ in data})} repositories**: "
-        f"{n_spam} that maintainers labelled `spam`, and {len(data) - n_spam} merged PRs from the same repositories.",
+        f"**{title}: {len(data)} real pull requests from {len({(p.owner, p.repo) for p, _ in data})} repositories**, "
+        f"{n_spam} that maintainers labelled `spam` and {len(data) - n_spam} merged PRs from the same repositories.",
         "",
         "| Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |",
         "|---|---|---|---|---|---|---|---|---|---|",
@@ -102,9 +102,23 @@ def report(set_name: str, names: list[str], data) -> None:
         lines.append(f"| {s['name']} | {s['kind']} | {s['judged']}/{s['total']} | {pct(s['recall'])} | "
                      f"{pct(s['precision'])} | {pct(s['waved'])} | {pct(s['fpr'])} | {when(s['median'])} | "
                      f"{when(s['median_model'])} | {tokens} |")
+    return lines, scores
+
+
+def report(set_name: str, names: list[str], data) -> None:
+    folder = RESULTS / set_name
+    # Outside contributors: the people spam actually comes from, and the only ones CodeRabbit's slop
+    # detection (and SlopGate, by default) judge. Owners' "spam" PRs in this data are forks running
+    # upstream's labelling automation on their own PRs, not a maintainer's judgement.
+    outside = [(pr, label) for pr, label in data if pr.author_association not in TRUSTED]
+    top, scores = table("Outside contributors", names, folder, outside)
+    everyone, _ = table("Everyone", names, folder, data)
+    lines = top + ["", *everyone]
     (RESULTS / f"{set_name}.md").write_text("\n".join(lines) + "\n")
     (RESULTS / f"{set_name}.urls.tsv").write_text("".join(f"{label}\t{pr.url}\n" for pr, label in data))
-    (RESULTS / f"{set_name}.json").write_text(json.dumps({"n": len(data), "spam": n_spam, "contenders": scores}, indent=2))
+    n_spam = sum(label == "spam" for _, label in outside)
+    (RESULTS / f"{set_name}.json").write_text(json.dumps(
+        {"n": len(outside), "spam": n_spam, "population": "outside contributors", "contenders": scores}, indent=2))
     print("\n".join(lines))
 
 
@@ -116,7 +130,8 @@ def main() -> None:
     ap.add_argument("--report", action="store_true", help="only rebuild the tables")
     args = ap.parse_args()
 
-    settings = config.load()
+    # like-for-like with CodeRabbit's default: trusted authors are never judged for spam
+    settings = dataclasses.replace(config.load(), judge_all_authors=False)
     gh = GitHub(settings.github_token)
     every = contenders(settings, gh)
     names = [c.label for c in every]
@@ -130,6 +145,8 @@ def main() -> None:
         for pr, _ in data:  # rows saved before SlopGate read CONTRIBUTING guides and looked for swarms
             if not pr.contributing:
                 pr.contributing = gh.contributing(pr.owner, pr.repo)
+            if not pr.pr_template:
+                pr.pr_template = gh.pr_template(pr.owner, pr.repo)
             if pr.similar_recent is None and any(getattr(c, "kind_hint", None) == "System One" for c in field):
                 time.sleep(2.1)  # one search call each; the search API allows 30 a minute
                 gh.swarm(pr)

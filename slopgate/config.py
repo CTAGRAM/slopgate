@@ -36,6 +36,7 @@ class Settings:
     gradient_url: str
     gradient_key: str | None
     gradient_model: str | None
+    judge_all_authors: bool  # like CodeRabbit's include_all_authors: also judge trusted authors for spam
 
 
 def load() -> Settings:
@@ -51,4 +52,5 @@ def load() -> Settings:
         gradient_url=env("GRADIENT_BASE_URL", "https://inference.do-ai.run/v1").rstrip("/"),
         gradient_key=env("GRADIENT_API_KEY"),
         gradient_model=env("GRADIENT_MODEL"),
+        judge_all_authors=env("SLOPGATE_JUDGE_ALL_AUTHORS", "").lower() in ("1", "true", "yes"),
     )

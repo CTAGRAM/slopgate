@@ -40,8 +40,9 @@ def comment(t: Triage, linked_issue: int | None = None) -> str:
     if t.area:
         rows.append(f"| Area | `{t.area}` |")
 
+    kind = f" ({t.spam_type.replace('_', '-')})" if t.spam_type else ""
     parts = [
-        f"**SlopGate: `{title}`** · {t.confidence:.0%} confident",
+        f"**SlopGate: `{title}`**{kind} · {t.confidence:.0%} confident",
         "",
         "| Signal | Probability |",
         "|---|---|",

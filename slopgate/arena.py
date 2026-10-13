@@ -18,7 +18,7 @@ import httpx
 
 from .config import Settings
 from .github import GitHub, PullRequest, _ts
-from .judge import VERDICTS, decide, questions, swarm_size
+from .judge import VERDICTS, classify_spam, decide, is_trusted, questions, swarm_size
 from .openjev import OpenJev
 
 
@@ -42,10 +42,13 @@ def system_one(settings: Settings, model_id: str, name: str) -> Contender:
     model = OpenJev(settings.openjev_url, settings.openjev_key, model_id)
 
     def run(pr: PullRequest, state: str) -> Opinion:
-        t = decide(model.ask(state, questions(pr)), swarm_size(pr))
-        r = t.reading
+        start = time.perf_counter()
+        t = decide(model.ask(state, questions(pr)), swarm_size(pr), is_trusted(pr, settings.judge_all_authors))
+        t = classify_spam(t, state, model)  # one more small read, only for spam
+        r, seconds = t.reading, time.perf_counter() - start
         flags = f", flags: {', '.join(t.flags)}" if t.flags else ""
-        return Opinion(name, "System One", t.verdict, t.probabilities["spam"], r.wall_ms / 1000,
+        flags += f", type: {t.spam_type.replace('_', '-')}" if t.spam_type else ""
+        return Opinion(name, "System One", t.verdict, t.probabilities["spam"], seconds,
                        r.input_tokens, f"{t.confidence:.0%} confident{flags}",
                        model_seconds=r.server_ms / 1000 if r.server_ms else None)
     run.label, run.kind_hint = name, "System One"

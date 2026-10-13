@@ -16,7 +16,7 @@ class SlopGate:
 
     def triage(self, url: str, escalate: bool = True) -> tuple[PullRequest, Triage]:
         pr = self.github.pull_request(url)
-        state, t = judge(pr, self.model)
+        state, t = judge(pr, self.model, self.settings.judge_all_authors)
         if escalate and t.uncertain:
             t = second_opinion(self.settings, state, t)
         return pr, t
@@ -34,7 +34,7 @@ class SlopGate:
 def summary(pr: PullRequest, t: Triage) -> dict:
     r = t.reading
     return {
-        "url": pr.url, "verdict": t.verdict, "confidence": round(t.confidence, 3),
+        "url": pr.url, "verdict": t.verdict, "spam_type": t.spam_type, "confidence": round(t.confidence, 3),
         "uncertain": t.uncertain, "flags": t.flags, "area": t.area,
         "probabilities": {k: round(v, 3) for k, v in t.probabilities.items()},
         "effort": round(t.effort, 2), "notes": t.notes, "second_opinion": t.second_opinion,

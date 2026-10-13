@@ -60,7 +60,34 @@ slow, expensive model only runs when the fast one's own probabilities say it is 
 
 ## Results on real pull requests
 
-RESULTS_TABLE
+### v1: rules written before we saw any data
+
+**101 real pull requests from 29 repositories**: 60 that maintainers labelled `spam`, and 41 merged PRs from the same repositories.
+
+| Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
+|---|---|---|---|---|---|---|---|---|---|
+| SlopGate · OpenJev | System One | 101/101 | 22% | 87% | 3% | 5% | 1.1 s | 293 ms | 1972 |
+| SlopGate · Clef-flash | System One | 101/101 | 23% | 93% | 22% | 2% | 989 ms | 135 ms | 2484 |
+| DiffusionGemma 26B as chat | Chat LLM | 100/101 | 23% | 93% | 23% | 2% | 1.3 s | 442 ms | 1732 |
+| CodeRabbit | Observed | 2/101 | 100% | 100% | - | 0% | 3.7 min | - | - |
+
+How well each judge's own spam probability separates spam from merged PRs (ROC AUC, 0.5 is a coin
+flip): **OpenJev 0.79**, Clef-flash 0.76, DiffusionGemma as a chat model 0.69. The typed
+probabilities of a System One read rank PRs better than a chat model's self-reported confidence,
+from the same family of weights.
+
+**What the misses taught us.** Much of what maintainers label spam in 2026 does not look like spam
+on its own. scrapy received [#8307](https://github.com/scrapy/scrapy/pull/8307),
+[#8308](https://github.com/scrapy/scrapy/pull/8308) and [#8309](https://github.com/scrapy/scrapy/pull/8309)
+within hours: three different accounts "fixing" the same bug, each with tests, all labelled spam.
+No judge that looks at one PR at a time can see that. So v2 adds **swarm detection**: SlopGate now
+counts the near-identical PRs other people opened in the 48 hours before this one, and the PRs that
+already reference the same issue. Only earlier PRs count, because that is all a gate sees when a PR
+arrives.
+
+### v2: with swarm detection
+
+V2_RESULTS
 
 How the test works (code in [`eval/`](eval)):
 

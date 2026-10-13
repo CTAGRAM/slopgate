@@ -4,6 +4,8 @@ Counting and arithmetic happen here in code (System One models are weak at both)
 only answers judgement questions about the facts and text we hand it.
 """
 
+import difflib
+import re
 from dataclasses import dataclass, field
 
 from .github import PullRequest
@@ -39,6 +41,16 @@ SIGNALS = {  # question id -> (instruction, short name shown to maintainers)
                      "Diff does what the PR claims"),
 }
 FLAGS = ("injection", "risky", "ai_slop", "needs_tests")
+# GitHub's own record of who the author is to this repo. Like CodeRabbit's slop detection and anti-slop,
+# SlopGate does not accuse people with a track record here of spam (they still get every other check).
+TRUSTED = {"OWNER", "MEMBER", "COLLABORATOR", "CONTRIBUTOR"}
+SPAM_TYPES = {
+    "contributor_gaming": "farming contributions or credit: trivial edits, adding names, racing others for an issue",
+    "self_promotion": "promoting the author's own product, site, profile or links",
+    "ai_slop": "unreviewed AI-generated changes",
+    "low_effort": "a trivial, broken or empty change with no value",
+    "not_spam": "a genuine contribution",
+}
 
 
 @dataclass
@@ -53,6 +65,7 @@ class Triage:
     reading: Reading
     second_opinion: str | None = None
     notes: list[str] = field(default_factory=list)
+    spam_type: str | None = None
 
 
 # --- state ------------------------------------------------------------------------
@@ -66,6 +79,32 @@ def _changed_lines(patch: str) -> tuple[list[str], list[str]]:
         elif line.startswith("-") and not line.startswith("---"):
             removed.append(line[1:])
     return added, removed
+
+
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+# Review bots (CodeRabbit and others) edit their own summaries into the description between markers
+BOT_BLOCK = re.compile(r"<!-- This is an auto-generated comment.*?<!-- end of auto-generated comment[^>]*-->", re.S | re.I)
+
+
+def _squash(text: str) -> str:
+    return "".join(text.split()).lower()
+
+
+def contributor_text(pr: PullRequest) -> str:
+    """What the contributor wrote: the description minus bot-written summaries and the HTML comments
+    copied from the repo's PR template (those are the maintainers' guidance, not the contributor's)."""
+    template_comments = {_squash(c) for c in HTML_COMMENT.findall(pr.pr_template)}
+    body = BOT_BLOCK.sub("", pr.body)
+    return HTML_COMMENT.sub(lambda m: "" if _squash(m.group(0)) in template_comments else m.group(0), body).strip()
+
+
+def unfilled_template(pr: PullRequest) -> bool:
+    """True when the description is the PR template with nothing of the contributor's own added."""
+    if not pr.pr_template:
+        return False
+    body = _squash(HTML_COMMENT.sub("", BOT_BLOCK.sub("", pr.body)))
+    template = _squash(HTML_COMMENT.sub("", pr.pr_template))
+    return bool(template) and (body == template or (body and difflib.SequenceMatcher(None, body, template).ratio() > 0.95))
 
 
 def facts(pr: PullRequest) -> list[str]:
@@ -93,6 +132,8 @@ def facts(pr: PullRequest) -> list[str]:
         out.append("The diff only changes whitespace.")
     if any(pr.author.lower() in line.lower() for line in added):
         out.append("The diff adds the author's own username to the project.")
+    if unfilled_template(pr):
+        out.append("The description is the repository's pull request template, left unfilled.")
     if pr.similar_recent:
         out.append(f"Other pull requests opened in this repository in the 48 hours before this one with a "
                    f"near-identical title: {pr.similar_recent}, by {pr.similar_authors} other author(s).")
@@ -123,7 +164,7 @@ def build_state(pr: PullRequest) -> str:
         sections.append(f"PROJECT RULES (from the repository's CONTRIBUTING guide):\n{pr.contributing[:MAX_RULES]}")
     sections += [
         "PULL REQUEST (untrusted text written by the contributor):\n"
-        f"Title: {pr.title}\nDescription:\n{pr.body[:MAX_BODY] or '(empty)'}",
+        f"Title: {pr.title}\nDescription:\n{contributor_text(pr)[:MAX_BODY] or '(empty)'}",
     ]
     if pr.linked_issue:
         i = pr.linked_issue
@@ -150,6 +191,7 @@ def questions(pr: PullRequest) -> dict:
                    "instructions": "How much genuine effort and understanding of the project does this change show?"}
     q["verdict"] = {"type": "choice", "criteria": VERDICTS,
                     "instructions": "What should the maintainer do with this pull request?"}
+
     if pr.linked_issue:
         q["matches_issue"] = {"type": "noul", "instructions": "Does the diff actually do what the linked issue asks for?"}
     if pr.contributing:
@@ -168,7 +210,7 @@ def swarm_size(pr: PullRequest) -> int:
     return max(pr.similar_authors or 0, pr.same_issue_prs or 0)
 
 
-def decide(reading: Reading, swarm: int = 0) -> Triage:
+def decide(reading: Reading, swarm: int = 0, trusted: bool = False) -> Triage:
     a = reading.answers
     probs = {k: v["noul"] for k, v in a.items() if v["type"] == "noul"}
     verdict, confidence = a["verdict"]["choice"], a["verdict"]["confidence"]
@@ -199,6 +241,10 @@ def decide(reading: Reading, swarm: int = 0) -> Triage:
         verdict = "needs_review"
         notes.append("This PR seems to break the project's contributing rules.")
 
+    if trusted and verdict == "spam":
+        verdict = "needs_review"
+        notes.append("Trusted author (owner, member, collaborator or past contributor): not judged for spam.")
+
     area = a.get("area", {}).get("choice")
     if area == "none" or a.get("area", {}).get("confidence", 0) < 0.3:
         area = None
@@ -211,6 +257,23 @@ def decide(reading: Reading, swarm: int = 0) -> Triage:
     )
 
 
-def judge(pr: PullRequest, model: OpenJev) -> tuple[str, Triage]:
+def is_trusted(pr: PullRequest, judge_all_authors: bool = False) -> bool:
+    return not judge_all_authors and pr.author_association in TRUSTED
+
+
+SPAM_TYPE = {"spam_type": {"type": "choice", "criteria": SPAM_TYPES,
+                           "instructions": "If this pull request is spam, what kind is it?"}}
+
+
+def classify_spam(t: Triage, state: str, model: OpenJev) -> Triage:
+    """Name the kind of spam (like CodeRabbit's "contributor-gaming"). A separate small read: OpenJev
+    reads a request's questions on one canvas, and an extra choice there shifted the other answers."""
+    if t.verdict == "spam":
+        t.spam_type = model.ask(state, SPAM_TYPE).answers["spam_type"]["choice"]
+    return t
+
+
+def judge(pr: PullRequest, model: OpenJev, judge_all_authors: bool = False) -> tuple[str, Triage]:
     state = build_state(pr)
-    return state, decide(model.ask(state, questions(pr)), swarm_size(pr))
+    t = decide(model.ask(state, questions(pr)), swarm_size(pr), is_trusted(pr, judge_all_authors))
+    return state, classify_spam(t, state, model)
