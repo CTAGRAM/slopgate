@@ -5,6 +5,36 @@
    "spam": 60,
    "repos": 29,
    "contenders": {
+    "SlopGate \u00b7 final": {
+     "name": "SlopGate \u00b7 final",
+     "kind": "Read + rules",
+     "judged": 101,
+     "total": 101,
+     "precision": 0.96875,
+     "recall": 0.5166666666666667,
+     "fpr": 0.024390243902439025,
+     "waved": 0.016666666666666666,
+     "median": 1.6069703749963082,
+     "median_model": 0.2145,
+     "tokens": 1937.0594059405942,
+     "auc": 0.8048780487804879,
+     "p95": 7.360766833007801,
+     "false_alarms": "1 / 41",
+     "cm": [
+      [
+       31,
+       26,
+       2,
+       1
+      ],
+      [
+       1,
+       28,
+       1,
+       11
+      ]
+     ]
+    },
     "SlopGate \u00b7 OpenJev": {
      "name": "SlopGate \u00b7 OpenJev",
      "kind": "System One",
@@ -694,46 +724,52 @@
      "p95": 430.6
     }
    },
+   "final_verdicts": {
+    "spam": 32,
+    "needs_review": 54,
+    "fast_track": 12,
+    "needs_changes": 3
+   },
    "repo_table": [
     {
      "repo": "juice-shop/juice-shop",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.3333333333333333,
-     "review": 0.6666666666666666,
-     "top_flag": "risky"
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": null
     },
     {
      "repo": "cloudflare/cloudflare-docs",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.3333333333333333,
-     "review": 0.5,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.3333333333333333,
+     "top_flag": null
     },
     {
      "repo": "scrapy/scrapy",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 0.5,
-     "top_flag": "ai_slop"
+     "called_spam": 0.5,
+     "review": 0.16666666666666666,
+     "top_flag": null
     },
     {
      "repo": "godotengine/godot",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.16666666666666666,
-     "review": 0.8333333333333334,
-     "top_flag": "risky"
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": null
     },
     {
      "repo": "DIYgod/RSSHub",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 1.0,
-     "top_flag": "needs_tests"
+     "called_spam": 0.3333333333333333,
+     "review": 0.6666666666666666,
+     "top_flag": null
     },
     {
      "repo": "topjohnwu/Magisk",
@@ -741,15 +777,15 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.5,
-     "top_flag": "ai_slop"
+     "top_flag": null
     },
     {
      "repo": "scrapinghub/dateparser",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 0.6666666666666666,
-     "top_flag": "risky"
+     "called_spam": 0.5,
+     "review": 0.16666666666666666,
+     "top_flag": null
     },
     {
      "repo": "flathub/flathub",
@@ -757,7 +793,7 @@
      "labelled_spam": 0.6,
      "called_spam": 0.2,
      "review": 0.4,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "brentmc79/juice-shop",
@@ -765,7 +801,7 @@
      "labelled_spam": 0.6,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "ezio143/juice-shop",
@@ -773,15 +809,15 @@
      "labelled_spam": 0.6,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "Pzqqt/android_kernel_xiaomi_marble",
      "n": 5,
      "labelled_spam": 0.6,
-     "called_spam": 0.6,
-     "review": 0.4,
-     "top_flag": "needs_tests"
+     "called_spam": 0.8,
+     "review": 0.2,
+     "top_flag": null
     },
     {
      "repo": "scikit-learn/scikit-learn",
@@ -789,7 +825,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.5,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "Zyphorix9X/Building-and-Securing-a-DevSecOps-Pipeline-JuiceShop",
@@ -797,7 +833,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "IamRitz/juice-shop-devsecops",
@@ -805,14 +841,14 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "samber/awesome-olap",
      "n": 2,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 1.0,
+     "called_spam": 0.5,
+     "review": 0.5,
      "top_flag": null
     },
     {
@@ -829,7 +865,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "MoodyFem/owasp_juice-shop",
@@ -837,7 +873,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "Zahid29-arch/juice-shop",
@@ -845,7 +881,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "ai_slop"
+     "top_flag": null
     },
     {
      "repo": "Clivern/Glitch",
@@ -853,7 +889,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "BeeStation/BeeStation-Hornet",
@@ -861,14 +897,14 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "OpsiMate/OpsiMate",
      "n": 2,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 0.5,
+     "called_spam": 0.5,
+     "review": 0.0,
      "top_flag": null
     },
     {
@@ -877,7 +913,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.5,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "pasan2002/IE3142-juice-shop",
@@ -885,7 +921,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "argotorg/solidity",
@@ -893,7 +929,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "RafaelBatistaMenegassi/juice-shop-secure-ci-cd",
@@ -901,7 +937,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "termux/termux-packages",
@@ -909,7 +945,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "jsoehner/juice-shop",
@@ -917,7 +953,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "CarrosK/juice-shop",
@@ -925,7 +961,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     }
    ],
    "monthly": {
@@ -963,6 +999,36 @@
    "spam": 40,
    "repos": 23,
    "contenders": {
+    "SlopGate \u00b7 final": {
+     "name": "SlopGate \u00b7 final",
+     "kind": "Read + rules",
+     "judged": 74,
+     "total": 74,
+     "precision": 0.92,
+     "recall": 0.575,
+     "fpr": 0.058823529411764705,
+     "waved": 0.025,
+     "median": 3.675231041983352,
+     "median_model": 0.3145,
+     "tokens": 1979.3108108108108,
+     "auc": 0.8058823529411765,
+     "p95": 7.776793500001077,
+     "false_alarms": "2 / 34",
+     "cm": [
+      [
+       23,
+       14,
+       2,
+       1
+      ],
+      [
+       2,
+       25,
+       0,
+       7
+      ]
+     ]
+    },
     "SlopGate \u00b7 OpenJev": {
      "name": "SlopGate \u00b7 OpenJev",
      "kind": "System One",
@@ -1552,14 +1618,20 @@
      "p95": 442.9
     }
    },
+   "final_verdicts": {
+    "spam": 25,
+    "needs_review": 39,
+    "needs_changes": 2,
+    "fast_track": 8
+   },
    "repo_table": [
     {
      "repo": "OpsiMate/OpsiMate",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.16666666666666666,
-     "review": 0.5,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.16666666666666666,
+     "top_flag": null
     },
     {
      "repo": "YASHK-arch/Triage-Sandbox",
@@ -1567,15 +1639,15 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "S3DFX-CYBER/FindMyGSoC",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 0.8333333333333334,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.3333333333333333,
+     "top_flag": null
     },
     {
      "repo": "RustPython/RustPython",
@@ -1583,23 +1655,23 @@
      "labelled_spam": 0.5,
      "called_spam": 0.16666666666666666,
      "review": 0.6666666666666666,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "AOSSIE-Org/Resonate-Website",
      "n": 6,
      "labelled_spam": 0.5,
-     "called_spam": 0.3333333333333333,
-     "review": 0.5,
-     "top_flag": "risky"
+     "called_spam": 0.5,
+     "review": 0.3333333333333333,
+     "top_flag": null
     },
     {
      "repo": "HarjjotSinghh/helicon",
      "n": 4,
      "labelled_spam": 0.5,
-     "called_spam": 0.25,
-     "review": 0.5,
-     "top_flag": "risky"
+     "called_spam": 0.5,
+     "review": 0.25,
+     "top_flag": null
     },
     {
      "repo": "YASHK-arch/RepoOwl-extension",
@@ -1607,7 +1679,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "ai_slop"
+     "top_flag": null
     },
     {
      "repo": "Shaurya1907/PYSCHECARE-main",
@@ -1615,7 +1687,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.25,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "Pcmhacker-piro/EaseMotion-css",
@@ -1623,22 +1695,22 @@
      "labelled_spam": 0.75,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "AOSSIE-Org/Resonate",
      "n": 4,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 1.0,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": null
     },
     {
      "repo": "MonaaEid/hiero-sdk-python",
      "n": 3,
      "labelled_spam": 0.6666666666666666,
-     "called_spam": 0.3333333333333333,
-     "review": 0.6666666666666666,
+     "called_spam": 1.0,
+     "review": 0.0,
      "top_flag": null
     },
     {
@@ -1647,7 +1719,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "Redot-Engine/redot-engine",
@@ -1655,7 +1727,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.5,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "meshtastic/firmware",
@@ -1663,7 +1735,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "GetBindu/Bindu",
@@ -1671,23 +1743,23 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "xchacha20-poly1305/husi",
      "n": 2,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 1.0,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": null
     },
     {
      "repo": "CircuitVerse/CircuitVerse",
      "n": 2,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 0.5,
-     "top_flag": "needs_tests"
+     "called_spam": 0.5,
+     "review": 0.0,
+     "top_flag": null
     },
     {
      "repo": "damus-io/damus",
@@ -1695,14 +1767,14 @@
      "labelled_spam": 0.5,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "pocketpy/pocketpy",
      "n": 2,
      "labelled_spam": 0.5,
-     "called_spam": 0.0,
-     "review": 1.0,
+     "called_spam": 0.5,
+     "review": 0.5,
      "top_flag": null
     },
     {
@@ -1711,7 +1783,7 @@
      "labelled_spam": 0.5,
      "called_spam": 0.5,
      "review": 0.5,
-     "top_flag": "needs_tests"
+     "top_flag": null
     },
     {
      "repo": "MMintzer/juice-shop",
@@ -1719,7 +1791,7 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "ai_slop"
+     "top_flag": null
     },
     {
      "repo": "Nareshkumawat-star/EaseMotion-css",
@@ -1727,15 +1799,15 @@
      "labelled_spam": 1.0,
      "called_spam": 0.0,
      "review": 1.0,
-     "top_flag": "risky"
+     "top_flag": null
     },
     {
      "repo": "socra-org/juice-shop",
      "n": 1,
      "labelled_spam": 1.0,
-     "called_spam": 0.0,
-     "review": 1.0,
-     "top_flag": "risky"
+     "called_spam": 1.0,
+     "review": 0.0,
+     "top_flag": null
     }
    ],
    "monthly": {

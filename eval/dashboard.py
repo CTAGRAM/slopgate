@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run import RESULTS, answers, score  # noqa: E402
 
 DATA = Path(__file__).parent / "data"
-CONTENDERS = ["SlopGate · OpenJev", "SlopGate · Clef-flash", "DiffusionGemma 26B as chat", "CodeRabbit", "anti-slop (34 rules)"]
+CONTENDERS = ["SlopGate · final", "SlopGate · OpenJev", "SlopGate · Clef-flash", "DiffusionGemma 26B as chat", "CodeRabbit", "anti-slop (34 rules)"]
 VERDICTS = ["spam", "needs_review", "needs_changes", "fast_track"]
 SETS = {"main": "prs", "heldout": "coderabbit"}
 
@@ -129,9 +129,9 @@ def swarm_example() -> list[dict]:
 def history() -> list[dict]:
     out = []
     for version, folder in (("v1", "prs-v1"), ("v2", "prs-v2"), ("v3", "prs")):
-        rows = list(answers(RESULTS / folder, CONTENDERS[0]).values())
+        rows = list(answers(RESULTS / folder, "SlopGate · OpenJev").values())
         if rows:
-            s = score(CONTENDERS[0], rows)
+            s = score("SlopGate · OpenJev", rows)
             out.append({"version": version, "recall": s["recall"], "precision": s["precision"], "fpr": s["fpr"]})
     return out
 
@@ -141,7 +141,8 @@ def main() -> None:
     for key, set_file in SETS.items():
         folder = RESULTS / set_file
         blocks = {}
-        oj = list(answers(folder, CONTENDERS[0]).values())
+        oj = list(answers(folder, "SlopGate · OpenJev").values())
+        final = list(answers(folder, "SlopGate · final").values())
         for name in CONTENDERS:
             rows = list(answers(folder, name).values())
             if rows:
@@ -151,7 +152,8 @@ def main() -> None:
             "n": len(labels), "spam": sum(l == "spam" for l in labels.values()),
             "repos": len({"/".join(u.split("/")[3:5]) for u in labels}),
             "contenders": blocks, "openjev": openjev_details(oj),
-            "repo_table": repos_table(oj), "monthly": monthly(set_file),
+            "final_verdicts": Counter(r["opinion"]["verdict"] for r in final if r["opinion"]["verdict"]),
+            "repo_table": repos_table(final or oj), "monthly": monthly(set_file),
         }
     target = RESULTS / "dashboard.json"
     target.write_text(json.dumps(out, indent=1, default=float))

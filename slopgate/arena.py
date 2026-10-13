@@ -18,7 +18,7 @@ import httpx
 
 from .config import Settings
 from .github import GitHub, PullRequest, _ts
-from .judge import VERDICTS, classify_spam, decide, is_trusted, questions, swarm_size
+from .judge import VERDICTS, classify_spam, decide, fused_verdict, is_trusted, questions, swarm_size
 from .openjev import OpenJev
 
 
@@ -154,6 +154,23 @@ def contenders(settings: Settings, gh: GitHub) -> list[Contender]:
     if antislop.available():
         out.append(antislop.contender(settings.github_token))
     return out
+
+
+FINAL = "SlopGate · final"
+
+
+def final_opinion(read: Opinion, rules: Opinion, trusted: bool) -> Opinion:
+    """SlopGate's real output: its read plus anti-slop's rules, through the same fused_verdict the webhook uses.
+    In production both run at once, so the time is the slower of the two."""
+    failed = None if rules.error or not rules.extra else rules.extra["failed"]
+    verdict = fused_verdict(read.verdict, trusted, failed) if read.verdict and not read.error else None
+    names = ", ".join(c["name"] for c in (rules.extra or {}).get("checks", []))
+    detail = (f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
+              if failed is not None else "rules unavailable") + f"; read: {read.verdict}"
+    seconds = max(x for x in (read.seconds, rules.seconds) if x is not None) if read.seconds or rules.seconds else None
+    return Opinion(FINAL, "Read + rules", verdict, read.p_spam, seconds, read.tokens, detail, read.error,
+                   read.model_seconds, {**(read.extra or {}), "rules": rules.extra, "trusted": trusted,
+                                        "read_verdict": read.verdict})
 
 
 def run_safely(c: Contender, pr: PullRequest, state: str) -> Opinion:

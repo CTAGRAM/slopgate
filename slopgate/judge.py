@@ -5,6 +5,7 @@ only answers judgement questions about the facts and text we hand it.
 """
 
 import difflib
+import os
 import re
 from dataclasses import dataclass, field
 
@@ -66,6 +67,7 @@ class Triage:
     second_opinion: str | None = None
     notes: list[str] = field(default_factory=list)
     spam_type: str | None = None
+    rules: dict | None = None  # anti-slop's checks on this PR, when they ran
 
 
 # --- state ------------------------------------------------------------------------
@@ -271,6 +273,33 @@ def decide(reading: Reading, swarm: int = 0, trusted: bool = False) -> Triage:
 
 def is_trusted(pr: PullRequest, judge_all_authors: bool = False) -> bool:
     return not judge_all_authors and pr.author_association in TRUSTED
+
+
+# anti-slop failures that make an untrusted author's PR spam. Chosen on the main eval set (2 gave the best
+# recall there at the same false-alarm count) and checked on the held-out set; see the README.
+RULES_THRESHOLD = int(os.environ.get("SLOPGATE_RULES_THRESHOLD", "2"))
+
+
+def fused_verdict(verdict: str, trusted: bool, rules_failed: int | None) -> str:
+    """The final call: anti-slop's rules and SlopGate's read. Spam when an author without a track record in
+    the repo fails enough rule checks, or when the read already says spam (which it never does for trusted
+    authors). Otherwise the read's verdict stands."""
+    if not trusted and rules_failed is not None and rules_failed >= RULES_THRESHOLD:
+        return "spam"
+    return verdict
+
+
+def apply_rules(t: Triage, rules: dict | None, trusted: bool) -> Triage:
+    t.rules = rules
+    if not rules or rules.get("error"):
+        return t
+    verdict = fused_verdict(t.verdict, trusted, rules["failed"])
+    if verdict != t.verdict:
+        t.verdict, t.uncertain = verdict, False
+        t.flags.append("rules")
+        t.notes.append(f"Failed {rules['failed']} of anti-slop's {rules['total']} rule checks: "
+                       + ", ".join(c["name"] for c in rules["checks"]) + ".")
+    return t
 
 
 SPAM_TYPE = {"spam_type": {"type": "choice", "criteria": SPAM_TYPES,

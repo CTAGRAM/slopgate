@@ -4,6 +4,19 @@
     "spam": 23,
     "contenders": [
       {
+        "name": "SlopGate \u00b7 final",
+        "kind": "Read + rules",
+        "judged": 25,
+        "total": 25,
+        "precision": 0.92,
+        "recall": 1.0,
+        "fpr": 1.0,
+        "waved": 0.0,
+        "median": 4.248180333990604,
+        "median_model": 0.259,
+        "tokens": 1616.64
+      },
+      {
         "name": "SlopGate \u00b7 OpenJev",
         "kind": "System One",
         "judged": 25,
@@ -74,6 +87,19 @@
     "n": 74,
     "spam": 40,
     "contenders": [
+      {
+        "name": "SlopGate \u00b7 final",
+        "kind": "Read + rules",
+        "judged": 74,
+        "total": 74,
+        "precision": 0.92,
+        "recall": 0.575,
+        "fpr": 0.058823529411764705,
+        "waved": 0.025,
+        "median": 3.675231041983352,
+        "median_model": 0.3145,
+        "tokens": 1979.3108108108108
+      },
       {
         "name": "SlopGate \u00b7 OpenJev",
         "kind": "System One",

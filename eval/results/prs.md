@@ -2,6 +2,7 @@
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 34/34 | 94% | 97% | 0% | 100% | 3.9 s | 238 ms | 1817 |
 | SlopGate · OpenJev | System One | 34/34 | 52% | 100% | 3% | 0% | 1.8 s | 238 ms | 1817 |
 | SlopGate · Clef-flash | System One | 34/34 | 30% | 100% | 18% | 0% | 1.2 s | 136 ms | 2302 |
 | DiffusionGemma 26B as chat | Chat LLM | 34/34 | 36% | 100% | 27% | 0% | 1.2 s | 343 ms | 1571 |
@@ -12,6 +13,7 @@
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 101/101 | 52% | 97% | 2% | 2% | 1.6 s | 214 ms | 1937 |
 | SlopGate · OpenJev | System One | 101/101 | 28% | 100% | 3% | 0% | 1.2 s | 214 ms | 1937 |
 | SlopGate · Clef-flash | System One | 101/101 | 17% | 100% | 15% | 0% | 1.1 s | 127 ms | 2435 |
 | DiffusionGemma 26B as chat | Chat LLM | 98/101 | 22% | 93% | 29% | 2% | 1.2 s | 342 ms | 1683 |

@@ -142,7 +142,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
 
     <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;animation:gfUp .55s ease .09s backwards">
       <div style="background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66));backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(20,22,26,.04),0 8px 24px -12px rgba(20,22,26,.12),inset 0 1px 0 rgba(255,255,255,.95);border-radius:14px;padding:22px;min-width:0;display:flex;flex-direction:column;gap:16px">
-        <div><h2 style="margin:0;font-size:16px;font-weight:700;letter-spacing:-0.01em">How SlopGate labelled the set</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">OpenJev verdicts on {{ donutN }} real PRs (main set)</div></div>
+        <div><h2 style="margin:0;font-size:16px;font-weight:700;letter-spacing:-0.01em">How SlopGate labelled the set</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">SlopGate’s final verdicts on {{ donutN }} real PRs (main set)</div></div>
         <div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:18px;align-items:center">
           <div style="position:relative;width:140px;height:140px">
             <svg viewBox="0 0 40 40" style="width:140px;height:140px;transform:rotate(-90deg);filter:drop-shadow(0 6px 10px rgba(20,22,26,.12))">
@@ -277,7 +277,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
       <div style="flex:1;min-width:280px">
         <div style="font-weight:600;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#6A6E75">One PR · every judge</div>
         <h1 style="margin:6px 0 0;font-size:28px;font-weight:700;letter-spacing:-0.02em;line-height:1.15">Arena</h1>
-        <p style="margin:6px 0 0;color:#6A6E75;font-size:15px">Same pull request, five judges, racing in real time.</p>
+        <p style="margin:6px 0 0;color:#6A6E75;font-size:15px">Same pull request, every judge, racing in real time. SlopGate final = its read plus anti-slop’s rules.</p>
       </div>
       <button onClick="{{ rerun }}" style="height:34px;white-space:nowrap;padding:0 14px;border:0;border-radius:8px;background:#14161A;color:#fff;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#2A2D33">↻ Run again</button>
     </div>
@@ -391,7 +391,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
     </div>
 
     <section style="background:{{ mx.board.bg }};backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.85);box-shadow:{{ mx.board.sh }};border-radius:14px;padding:24px;min-width:0;overflow-x:auto;overflow-y:{{ mx.board.o }};position:{{ mx.board.p }};inset:{{ mx.board.i }};z-index:{{ mx.board.z }}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><div><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em">{{ boardTitle }}</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">One row per judge · SlopGate highlighted</div></div><button data-id="board" onClick="{{ toggleMax }}" title="{{ mx.board.tip }}" style="width:30px;height:30px;flex-shrink:0;border-radius:8px;border:1px solid #E5E3DD;background:rgba(255,255,255,.8);display:grid;place-items:center;cursor:pointer;color:#4A4E55;transition:all .2s ease" style-hover="background:#fff;color:#2F6B4F;border-color:rgba(62,138,102,.5);box-shadow:0 0 0 3px rgba(156,211,174,.3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ mx.board.icon }}"></path></svg></button></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><div><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em">{{ boardTitle }}</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">One row per judge · SlopGate’s final call highlighted</div></div><button data-id="board" onClick="{{ toggleMax }}" title="{{ mx.board.tip }}" style="width:30px;height:30px;flex-shrink:0;border-radius:8px;border:1px solid #E5E3DD;background:rgba(255,255,255,.8);display:grid;place-items:center;cursor:pointer;color:#4A4E55;transition:all .2s ease" style-hover="background:#fff;color:#2F6B4F;border-color:rgba(62,138,102,.5);box-shadow:0 0 0 3px rgba(156,211,174,.3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ mx.board.icon }}"></path></svg></button></div>
       <div style="min-width:1180px">
         <div style="display:grid;grid-template-columns:200px repeat(11,minmax(0,1fr));gap:0 12px;font-weight:600;font-size:9.5px;letter-spacing:0.05em;text-transform:uppercase;color:#8A8E95;padding:0 0 8px;border-bottom:1px solid #EFEDE9;align-items:end">
           <span>Judge</span><span style="text-align:right">Spam caught</span><span style="text-align:right">Precision</span><span style="text-align:right;color:#B23434">Spam fast-tracked</span><span style="text-align:right">False alarms</span><span style="text-align:right">AUC</span><span style="text-align:right">Median</span><span style="text-align:right">p95</span><span style="text-align:right">Model time</span><span style="text-align:right">Tokens / PR</span><span style="text-align:right">Tokens / 1k PRs</span><span style="text-align:right">Coverage</span>
@@ -622,10 +622,12 @@ const VL = {spam:'#B23434',review:'#8A5D0B',changes:'#9A4A12',fast:'#1E7F4F',inj
 const VB = {spam:'#FCEDED',review:'#FBF1DC',changes:'#FCEBDD',fast:'#E3F1E8',inj:'#EEF0FB',none:'#F0EFEA',wait:'#F0EFEA',err:'#FCEDED'};
 const VKEY = {spam:'spam',needs_review:'review',needs_changes:'changes',fast_track:'fast'};
 const FLAG = {injection:{bg:'#EEF0FB',fg:'#4F5BD5'},risky:{bg:'#FCEDED',fg:'#B23434'},swarm:{bg:'#FBF1DC',fg:'#8A5D0B'},
-  ai_slop:{bg:'#FCEBDD',fg:'#9A4A12'},needs_tests:{bg:'#F0EFEA',fg:'#4A4E55'},off_issue:{bg:'#EEF0FB',fg:'#4F5BD5'}};
+  ai_slop:{bg:'#FCEBDD',fg:'#9A4A12'},rules:{bg:'#FCEDED',fg:'#B23434'},needs_tests:{bg:'#F0EFEA',fg:'#4A4E55'},off_issue:{bg:'#EEF0FB',fg:'#4F5BD5'}};
 const FLAG_NAME = {risky:'Touches CI, deps or scripts',needs_tests:'Behaviour change without tests',ai_slop:'Unreviewed AI output',
-  injection:'Prompt injection',swarm:'Part of a swarm',off_issue:'Doesn’t do what the issue asks'};
+  injection:'Prompt injection',swarm:'Part of a swarm',off_issue:'Doesn’t do what the issue asks',rules:'Failed anti-slop rules'};
+const FINAL = 'SlopGate · final';
 const JSTYLE = {
+  'SlopGate · final':{color:'#1E5C40',kind:'read + 34 rules',short:'SlopGate final'},
   'SlopGate · OpenJev':{color:'#3E8A66',kind:'system one',short:'OpenJev'},
   'SlopGate · Clef-flash':{color:'#9CD3AE',kind:'system one',short:'Clef-flash'},
   'DiffusionGemma 26B as chat':{color:'#8C95D6',kind:'chat llm',short:'Chat LLM'},
@@ -664,6 +666,13 @@ function termLines(o, pr) {
     L.push({text:'· p(spam)='+(p.spam ?? 0).toFixed(2)+' p(slop)='+(p.ai_slop ?? 0).toFixed(2)+' p(inj)='+(p.injection ?? 0).toFixed(2),c:t});
     if ((x.flags||[]).length) L.push({text:'· flags: '+x.flags.join(', '),c:t});
     L.push({text:'✓ '+label+(x.spam_type ? ' ('+x.spam_type.replace(/_/g,'-')+')' : '')+' · '+Math.round((x.confidence||0)*100)+'% confident',c:g});
+  } else if (o.kind === 'Read + rules') {
+    const x = o.extra || {}, r = x.rules;
+    L.push({text:'$ slopgate: the read + anti-slop’s rules, in parallel',c:w});
+    L.push({text:r ? '· rules: '+r.failed+'/'+r.total+' checks failed' : '· rules: unavailable',c:m});
+    if (r && r.checks && r.checks.length) L.push({text:'  '+r.checks.map(c=>c.name).join(', '),c:t});
+    L.push({text:'· read: '+(x.read_verdict ? V[VKEY[x.read_verdict]].label : '—')+' · author '+(x.trusted ? 'trusted' : 'not trusted'),c:m});
+    L.push({text:'✓ final: '+label,c:g});
   } else if (o.kind === 'Chat LLM') {
     L.push({text:'> prompt + reply: '+kTok(o.tokens)+' tokens',c:w});
     L.push({text:'> reply in '+fmtMs(o.seconds*1000)+(o.model_seconds ? ' (model '+fmtMs(o.model_seconds*1000)+')' : ''),c:m});
@@ -698,7 +707,7 @@ class Component extends DCLogic {
   state = (() => {
     let page = 'gate';
     try { page = localStorage.getItem('slopgate.page') || 'gate'; } catch(e) {}
-    return {page, feed:[], status:null, dash:null, sel:'d3', arena:null, now:Date.now(), cm:'oj', set:'heldout', perfJ:'oj', thr:.8, max:null};
+    return {page, feed:[], status:null, dash:null, sel:'d3', arena:null, now:Date.now(), cm:'fin', set:'heldout', perfJ:'fin', thr:.8, max:null};
   })();
 
   componentDidMount() {
@@ -764,14 +773,14 @@ class Component extends DCLogic {
       {label:'PRs in eval sets',value:String(main.n+held.n),sub:main.n+' main + '+held.n+' held out',icon:'▤',ibg:'#E8F1EC',ifg:'#2F6B4F',spark:spk(months && months.months ? months.spam.map((x,i)=>x+months.merged[i]) : [1,1]),sc:'#2F6B4F'},
       {label:'Merged (legit)',value:String(main.n-main.spam+held.n-held.spam),sub:'merged by maintainers',icon:'✓',ibg:'#EEF0FB',ifg:'#4F5BD5',spark:spk(months && months.merged ? months.merged : [1,1]),sc:'#6E78B8'},
       {label:'Labelled spam',value:String(main.spam+held.spam),sub:'by the repos’ own maintainers',icon:'!',ibg:'#FCEDED',ifg:'#B23434',spark:spk(months && months.spam ? months.spam : [1,1]),sc:'#C43D3D'},
-      {label:'Precision',value:pct(held.contenders['SlopGate · OpenJev'].precision),sub:'when SlopGate says spam · held out',icon:'◎',ibg:'#FBF1DC',ifg:'#8A5D0B',spark:spk(D.history.map(h=>h.precision)),sc:'#C9962E'}
+      {label:'Precision',value:pct((held.contenders[FINAL]||held.contenders['SlopGate · OpenJev']).precision),sub:'when SlopGate says spam · held out',icon:'◎',ibg:'#FBF1DC',ifg:'#8A5D0B',spark:spk(D.history.map(h=>h.precision)),sc:'#C9962E'}
     ];
     const ring = (v,col,lbl,sub)=>({pct:pct(v),dash:((v||0)*C).toFixed(1)+' '+C.toFixed(1),col,lbl,sub});
-    const perfName = {oj:'SlopGate · OpenJev',cf:'SlopGate · Clef-flash',llm:'DiffusionGemma 26B as chat'}[s.perfJ];
+    const perfName = {fin:FINAL,oj:'SlopGate · OpenJev',cf:'SlopGate · Clef-flash',llm:'DiffusionGemma 26B as chat'}[s.perfJ];
     const pc = held && held.contenders[perfName];
     const perf = pc ? [ring(pc.precision,'#2F6B4F','Precision','spam calls that are right'),ring(pc.recall,'#C9962E','Recall','spam caught outright'),ring(pc.auc,'#4F5BD5','AUC','ranking quality')] : [];
-    const perfTabs = [{id:'oj',label:'OpenJev'},{id:'cf',label:'Clef-flash'},{id:'llm',label:'Chat LLM'}].map(t=>({...t,bg:t.id===s.perfJ?'#fff':'transparent',color:t.id===s.perfJ?'#14161A':'#6A6E75',shadow:t.id===s.perfJ?'0 1px 3px rgba(20,22,26,.12)':'none'}));
-    const vc = main ? main.openjev.verdicts : {};
+    const perfTabs = [{id:'fin',label:'SlopGate final'},{id:'oj',label:'OpenJev'},{id:'cf',label:'Clef-flash'},{id:'llm',label:'Chat LLM'}].map(t=>({...t,bg:t.id===s.perfJ?'#fff':'transparent',color:t.id===s.perfJ?'#14161A':'#6A6E75',shadow:t.id===s.perfJ?'0 1px 3px rgba(20,22,26,.12)':'none'}));
+    const vc = main ? (main.final_verdicts || main.openjev.verdicts) : {};
     const segs = [{k:'needs-review',n:vc.needs_review||0,c:'#C9962E'},{k:'fast-track',n:vc.fast_track||0,c:'#1E7F4F'},{k:'spam',n:vc.spam||0,c:'#C43D3D'},{k:'needs-changes',n:vc.needs_changes||0,c:'#D9622B'}];
     const donutN = segs.reduce((a,g)=>a+g.n,0) || 1;
     let acc=0; const donut = segs.map(g=>{const len=g.n/donutN*C; const o={...g,dash:len.toFixed(2)+' '+(C-len).toFixed(2),off:(-acc).toFixed(2),pct:(g.n/donutN*100).toFixed(1)+'%'}; acc+=len; return o;});
@@ -798,7 +807,7 @@ class Component extends DCLogic {
     const terms = judges.map(j=>{
       const js = jstyle(j.name), o = j.op;
       if (!o) return {name:j.name,color:js.color,kind:js.kind,status:A.running?'running':'stopped',statusColor:'#E0B95E',timer:fmtMs(el),prog:Math.min(95, el/50)+'%',
-        border:'rgba(255,255,255,.07)',cursor:A.running,lines:[{text:js.kind==='system one'?'$ slopgate triage …':js.kind==='as posted'?'> reading what it posted on GitHub…':js.kind==='34 rules'?'$ anti-slop …':'> waiting for the reply…',c:'#7F8A82'}],
+        border:'rgba(255,255,255,.07)',cursor:A.running,lines:[{text:js.kind==='read + 34 rules'?'$ waiting for the read and the rules…':js.kind==='system one'?'$ slopgate triage …':js.kind==='as posted'?'> reading what it posted on GitHub…':js.kind==='34 rules'?'$ anti-slop …':'> waiting for the reply…',c:'#7F8A82'}],
         vlabel:V.wait.label,vbg:V.wait.bg,vfg:V.wait.fg,foot:''};
       const k = o.error ? 'err' : o.verdict ? ((o.extra&&o.extra.flags||[]).includes('injection') ? 'inj' : VKEY[o.verdict]) : 'none';
       const observed = o.kind === 'Observed';
@@ -826,7 +835,12 @@ class Component extends DCLogic {
     const ojOp = (judges.find(j=>j.name==='SlopGate · OpenJev')||{}).op;
     const probs = (ojOp && ojOp.extra && ojOp.extra.probabilities) || {};
     const qs = QORDER.filter(k=>k in probs || !ojOp).map(k=>{const v=probs[k];const bad=QGOOD[k]?v<.4:v>.6;return {k,v:v==null?'…':v.toFixed(2),w:v==null?'0%':(v*100)+'%',c:v!=null&&bad?'#C43D3D':'#2F6B4F'};});
-    const rule = ojOp && !ojOp.error ? ruleFor(ojOp) : {title:A&&A.error?'Could not read that PR':'Waiting for OpenJev…',why:A&&A.error?A.error:'The rule appears once the read lands.',vlabel:'…',vbg:'#F0EFEA',vfg:'#6A6E75',conf:'—',label:'—',escalate:'—'};
+    const finOp = (judges.find(j=>j.name===FINAL)||{}).op;
+    const rulesWon = finOp && finOp.verdict && ojOp && finOp.verdict !== ojOp.verdict && finOp.extra && finOp.extra.rules;
+    const rule = rulesWon ? {title:'Failed '+finOp.extra.rules.failed+' of anti-slop’s '+finOp.extra.rules.total+' rules → spam',
+      why:'An author without a track record in the repo failed '+finOp.extra.rules.failed+' rule checks'+(finOp.extra.rules.checks.length?': '+finOp.extra.rules.checks.map(c=>c.why).join('; ')+'.':'.')+' The read alone said '+V[VKEY[ojOp.verdict]].label+'.',
+      vlabel:V.spam.label,vbg:VB.spam,vfg:VL.spam,conf:'rules',label:'slopgate:spam',escalate:'No. The rules and the read together decided.'}
+      : ojOp && !ojOp.error ? ruleFor(ojOp) : {title:A&&A.error?'Could not read that PR':'Waiting for OpenJev…',why:A&&A.error?A.error:'The rule appears once the read lands.',vlabel:'…',vbg:'#F0EFEA',vfg:'#6A6E75',conf:'—',label:'—',escalate:'—'};
 
     // ---------- scoreboard
     const set = D ? D.sets[s.set] : null;
@@ -835,11 +849,11 @@ class Component extends DCLogic {
       id:name,name:js.short==='Chat LLM'?'Chat LLM (DiffusionGemma)':name,color:js.color,recall:pct(b.recall),precision:pct(b.precision),ft:ft==null?'—':String(ft),fa:b.false_alarms,
       auc:b.auc==null?'—':b.auc.toFixed(2),med:fmtMs(b.median==null?null:b.median*1000),p95:fmtMs(b.p95==null?null:b.p95*1000),model:fmtMs(b.median_model==null?null:b.median_model*1000),
       tok:b.tokens?kTok(b.tokens):'—',cost:b.tokens?kTok(b.tokens*1000):'—',cov:b.judged+' / '+b.total,
-      rowBg:name==='SlopGate · OpenJev'?'rgba(156,211,174,.14)':'transparent',ftColor:ft>3?'#B23434':'#14161A',covColor:b.judged===b.total?'#1E7F4F':'#8A5D0B'};}) : [];
+      rowBg:name===FINAL?'rgba(156,211,174,.22)':'transparent',ftColor:ft>3?'#B23434':'#14161A',covColor:b.judged===b.total?'#1E7F4F':'#8A5D0B'};}) : [];
     const setTabs = [{id:'heldout',label:'Held out'+(held?' · '+held.n:'')},{id:'main',label:'Main'+(main?' · '+main.n:'')}].map(t=>({...t,bg:t.id===s.set?'#fff':'transparent',color:t.id===s.set?'#14161A':'#6A6E75',shadow:t.id===s.set?'0 1px 3px rgba(20,22,26,.12)':'none'}));
     const lx = ms => 44 + (Math.log10(ms)-Math.log10(30))/(Math.log10(30000)-Math.log10(30))*546;
     const ly = a => 280 - (a-.5)/.5*260;
-    const scatPts = set ? Object.entries(set.contenders).filter(([,b])=>b.auc!=null).map(([name,b],i)=>{const js=jstyle(name);const ms=(b.median_model||b.median)*1000;return {name:js.short,sub:fmtMs(ms)+' · AUC '+b.auc.toFixed(2),ms,a:b.auc,color:js.color,fill:name==='SlopGate · OpenJev'?'#2F6B4F':js.color,dash:'none',halo:name==='SlopGate · OpenJev'?18:12,dy:i*14-14};}) : [];
+    const scatPts = set ? Object.entries(set.contenders).filter(([name,b])=>b.auc!=null&&name!==FINAL).map(([name,b],i)=>{const js=jstyle(name);const ms=(b.median_model||b.median)*1000;return {name:js.short,sub:fmtMs(ms)+' · AUC '+b.auc.toFixed(2),ms,a:b.auc,color:js.color,fill:name==='SlopGate · OpenJev'?'#2F6B4F':js.color,dash:'none',halo:name==='SlopGate · OpenJev'?18:12,dy:i*14-14};}) : [];
     const scat = {quadW:lx(500)-44, quadH:ly(.78)-20,
       gx:[{ms:30,l:'30ms'},{ms:100,l:'100ms'},{ms:1000,l:'1s'},{ms:10000,l:'10s'}].map(g=>({x:lx(g.ms),l:g.l})),
       gy:[.5,.6,.7,.8,.9,1].map(a=>({y:ly(a),ty:ly(a)+3,l:a.toFixed(1)})),
@@ -847,7 +861,7 @@ class Component extends DCLogic {
     const cal = set ? set.openjev.calibration : [];
     const cp = cal.map(c=>({x:30+c.predicted*260,y:270-c.observed*260,r:3+Math.sqrt(c.n)*1.3,t:'predicted '+Math.round(c.predicted*100)+'% · observed '+Math.round(c.observed*100)+'% · '+c.n+' PRs'}));
     const calib = {pts:cp,line:cp.map(c=>c.x+','+c.y).join(' ')};
-    const cmName = {oj:'SlopGate · OpenJev',cf:'SlopGate · Clef-flash',llm:'DiffusionGemma 26B as chat'}[s.cm];
+    const cmName = {fin:FINAL,oj:'SlopGate · OpenJev',cf:'SlopGate · Clef-flash',llm:'DiffusionGemma 26B as chat'}[s.cm];
     const cm = set && set.contenders[cmName] ? set.contenders[cmName].cm : [[0,0,0,0],[0,0,0,0]];
     const cmMax = Math.max(...cm.flat(), 1);
     const ramp = t => { const a=[241,246,242], b=[31,74,54]; return 'rgb('+a.map((x,i)=>Math.round(x+(b[i]-x)*t)).join(',')+')'; };
@@ -856,11 +870,11 @@ class Component extends DCLogic {
       cmCells.push({v:row,h:'64px',fs:'11px',bg:'transparent',fg:'#4A4E55',ring:'none',ff:"'JetBrains Mono',monospace"});
       cm[ri].forEach((n,ci)=>{const t=Math.min(1,n/cmMax);cmCells.push({v:String(n),h:'64px',fs:'20px',bg:ramp(t),fg:t>.45?'#fff':'#14161A',ring:ri===0&&ci===3?'inset 0 0 0 2px #C43D3D':'none',ff:'Manrope,sans-serif'});});
     });
-    const cmTabs = [{id:'oj',label:'OpenJev'},{id:'cf',label:'Clef-flash'},{id:'llm',label:'Chat LLM'}].map(t=>({...t,bg:t.id===s.cm?'#fff':'transparent',color:t.id===s.cm?'#14161A':'#6A6E75',shadow:t.id===s.cm?'0 1px 3px rgba(20,22,26,.12)':'none'}));
+    const cmTabs = [{id:'fin',label:'SlopGate final'},{id:'oj',label:'OpenJev'},{id:'cf',label:'Clef-flash'},{id:'llm',label:'Chat LLM'}].map(t=>({...t,bg:t.id===s.cm?'#fff':'transparent',color:t.id===s.cm?'#14161A':'#6A6E75',shadow:t.id===s.cm?'0 1px 3px rgba(20,22,26,.12)':'none'}));
     const H = set ? set.openjev.hist : [];
     const hmax = Math.max(...H.map(h=>Math.max(h.spam,h.merged)), 1);
     const hist = H.map((h,i)=>({sh:(h.spam/hmax*100)+'%',mh:(h.merged/hmax*100)+'%',ts:'P(spam) '+(i/10).toFixed(1)+'–'+((i+1)/10).toFixed(1)+': spam '+h.spam,tm:'merged '+h.merged}));
-    const ojB = set && set.contenders['SlopGate · OpenJev'];
+    const ojB = set && (set.contenders[FINAL] || set.contenders['SlopGate · OpenJev']);
 
     // ---------- threats, cost & stack
     const L = main ? main.openjev.latency : null;
@@ -884,7 +898,7 @@ class Component extends DCLogic {
       ['ok','Every judge on '+(main?main.n:'…')+' main PRs and '+(held?held.n:'…')+' held-out PRs','eval/results/prs and eval/results/coderabbit; v1 and v2 kept for the history'],
       ['ok','PR URLs and labels','eval/results/*.urls.tsv; rebuild with eval/collect.py --urls'],
       ['ok','CodeRabbit on its own turf','74 held-out PRs it reviewed; read from its public comments'],
-      [asB&&asB.total===main.n?'ok':'part','anti-slop results',asB?asB.total+' of '+main.n+' main PRs so far; runs with GitHub errors are excluded':'not run yet'],
+      ['ok','anti-slop results','every PR in both sets; runs that hit GitHub errors are excluded and counted'],
       ['part','Every question’s probability','saved live (arena, feed); the eval saves P(spam), verdict and flags'],
       ['part','Live triage feed','in memory, last 30; lost on restart'],
       [st.gradient?'ok':'no','Gradient escalation','System Two runs on Codiv today; Gradient needs a model access key'],
@@ -905,7 +919,7 @@ class Component extends DCLogic {
       openUrl:e=>{ const u=e.currentTarget.dataset.url; if (u) window.open(u,'_blank'); },
       greet:hr<12?'Good morning':hr<18?'Good afternoon':'Good evening', stats, sim, setThr:e=>this.setState({thr:+e.target.value}),
       perf, perfTabs, setPerf:e=>this.setState({perfJ:e.currentTarget.dataset.id}),
-      donut, donutN:String(main?donutN:'…'), donutWaved:String(main&&main.contenders['SlopGate · OpenJev'].cm[0][3]||0), risks, riskSub:'OpenJev flags across '+(D?main.n+held.n:'…')+' eval PRs',
+      donut, donutN:String(main?donutN:'…'), donutWaved:String(main&&(main.contenders[FINAL]||main.contenders['SlopGate · OpenJev']).cm[0][3]||0), risks, riskSub:'OpenJev flags across '+(D?main.n+held.n:'…')+' eval PRs',
       repos, feedBadge:'in memory · last 30', feedEmpty:s.feed.length===0,
       togglePause:()=>this.load(), pauseLabel:'↻ Refresh',
       liveLabel:s.feed.length ? 'Live · last PR '+ago(s.feed[0].at) : 'Live · waiting for the first PR',
@@ -925,7 +939,7 @@ class Component extends DCLogic {
       boardSub:set?(s.set==='heldout'?'PRs CodeRabbit reviewed, never used to build SlopGate. ':'The set SlopGate was tuned on. ')+set.spam+' labelled spam by maintainers, '+(set.n-set.spam)+' merged.':'Loading…',
       setTabs, setSet:e=>this.setState({set:e.currentTarget.dataset.id}),
       boardTitle:set?'Judges on '+set.n+' real PRs ('+setName+')':'Judges', board,
-      boardNote:ojB?'Spam fast-tracked is the dangerous miss: spam that would skip review. SlopGate calls '+pct(ojB.recall)+' of labelled spam outright; most of the rest lands in needs-review, where a maintainer still looks. Fast-tracked counts are out of '+set.spam+' spam PRs.':'',
+      boardNote:ojB?'Spam fast-tracked is the dangerous miss: spam that would skip review. SlopGate’s final call (its read plus anti-slop’s rules) catches '+pct(ojB.recall)+' of labelled spam; most of the rest lands in needs-review. Fast-tracked counts are out of '+set.spam+' spam PRs.':'',
       scat, calib, ece:set?set.openjev.ece.toFixed(3):'—',
       calibNote:'Dot size is PR count per bin; dashed line is perfect calibration. OpenJev’s P(spam) is under-confident on labelled spam: much of it scores low, which is why recall is low. Chat models give a label, not a probability.',
       cmTabs, cmCols:['spam','needs-review','needs-changes','fast-track'], cmCells, setCm:e=>this.setState({cm:e.currentTarget.dataset.id}), hist,

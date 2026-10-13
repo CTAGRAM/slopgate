@@ -36,13 +36,18 @@ def comment(t: Triage, linked_issue: int | None = None) -> str:
     if "follows_rules" in t.probabilities:
         p = t.probabilities["follows_rules"]
         rows.append(f"| Follows this repo's CONTRIBUTING rules | `{_bar(p)}` {p:.0%} |")
+    if t.rules and not t.rules.get("error"):
+        names = ", ".join(f"`{c['name']}`" for c in t.rules["checks"]) or "none"
+        rows.append(f"| anti-slop rule checks failed | {t.rules['failed']} of {t.rules['total']}: {names} |")
     rows.append(f"| Effort shown | {EFFORT[min(3, round(t.effort))]} ({t.effort:.1f} / 3) |")
     if t.area:
         rows.append(f"| Area | `{t.area}` |")
 
     kind = f" ({t.spam_type.replace('_', '-')})" if t.spam_type else ""
+    why = (f"{t.rules['failed']} anti-slop rule checks failed" if "rules" in t.flags
+           else f"{t.confidence:.0%} confident")
     parts = [
-        f"**SlopGate: `{title}`**{kind} · {t.confidence:.0%} confident",
+        f"**SlopGate: `{title}`**{kind} · {why}",
         "",
         "| Signal | Probability |",
         "|---|---|",

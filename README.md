@@ -5,7 +5,7 @@ spend their attention on contributions that deserve it.
 
 SlopGate reads a pull request (diff, description, linked issue, the repo's own `CONTRIBUTING`
 rules, and contributor facts it computes itself) and asks an open-weight **System One** model a set
-of typed questions in a single call. Every answer comes back as a calibrated probability, so the
+of typed questions in a single call. In parallel it runs the open-source [anti-slop](https://github.com/peakoss/anti-slop)'s 34 rule checks, unmodified, and fuses both into one final call. Every answer comes back as a calibrated probability, so the
 gate knows the difference between *sure* and *guessing*. When it is unsure, it escalates to an
 open-weight LLM. It never closes anything: it labels, explains, and leaves the call to a human.
 
@@ -56,6 +56,18 @@ And the input is cleaned first: summaries that review bots (such as CodeRabbit) 
 description, and HTML comments copied from the repo's own PR template, are removed, because the
 contributor did not write them.
 
+**anti-slop's 34 rules, fused in.** [anti-slop](https://github.com/peakoss/anti-slop) is the most popular
+open-source slop filter: deterministic checks on account age, profile, fork bursts, merge ratio, branch,
+blocked paths, description and more. SlopGate runs it unmodified, as a separate program, behind a
+read-only proxy, at the same time as the model read. Its rules see what a model cannot (an author's
+merge history across GitHub); the read sees what rules cannot (whether the diff does what it claims,
+injection, swarms). The final call:
+
+> **Spam** when an author without a track record in the repo fails **2 or more** rule checks, or when the
+> read says spam. Otherwise the read's verdict stands. (`SLOPGATE_RULES_THRESHOLD` changes the 2.)
+
+The scorecard lists every rule that failed and why.
+
 **Trusted authors.** Like CodeRabbit's slop detection and anti-slop, SlopGate does not accuse the
 repo's owners, members, collaborators or past contributors of spam. Their PRs still get every other
 check, including prompt injection and risky files. Set `SLOPGATE_JUDGE_ALL_AUTHORS=1` to judge
@@ -83,10 +95,13 @@ live server or from [`eval/results`](eval/results); nothing is mocked.
 
 ```mermaid
 flowchart LR
-    A[PR opened] --> B[Facts computed in code<br/>swarms, rules, clean input]
+    A[PR opened] --> B[Facts computed in code<br/>swarms, CONTRIBUTING, clean input]
+    A --> R[anti-slop's 34 rules<br/>unmodified, read-only]
     B --> C[System One: OpenJev<br/>all questions, one read, ~200 ms]
-    C -->|confident| D[Label + scorecard comment]
-    C -->|unsure| E[System Two: open-weight chat LLM<br/>DO Gradient or Codiv]
+    C --> F{Final call<br/>read + rules}
+    R --> F
+    F -->|confident| D[Label + scorecard comment]
+    F -->|unsure| E[System Two: open-weight chat LLM<br/>Codiv or DO Gradient]
     E --> D
 ```
 
@@ -105,6 +120,7 @@ never seen.
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 34/34 | 94% | 97% | 0% | 100% | 3.9 s | 238 ms | 1817 |
 | SlopGate · OpenJev | System One | 34/34 | 52% | 100% | 3% | 0% | 1.8 s | 238 ms | 1817 |
 | SlopGate · Clef-flash | System One | 34/34 | 30% | 100% | 18% | 0% | 1.2 s | 136 ms | 2302 |
 | DiffusionGemma 26B as chat | Chat LLM | 34/34 | 36% | 100% | 27% | 0% | 1.2 s | 343 ms | 1571 |
@@ -115,19 +131,21 @@ never seen.
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 101/101 | 52% | 97% | 2% | 2% | 1.6 s | 214 ms | 1937 |
 | SlopGate · OpenJev | System One | 101/101 | 28% | 100% | 3% | 0% | 1.2 s | 214 ms | 1937 |
 | SlopGate · Clef-flash | System One | 101/101 | 17% | 100% | 15% | 0% | 1.1 s | 127 ms | 2435 |
 | DiffusionGemma 26B as chat | Chat LLM | 98/101 | 22% | 93% | 29% | 2% | 1.2 s | 342 ms | 1683 |
 | CodeRabbit | Observed | 2/101 | 100% | 100% | - | 0% | 3.7 min | - | - |
 | anti-slop (34 rules) | Rules | 96/101 | 38% | 84% | 62% | 10% | 164 ms | - | - |
 
-How SlopGate (OpenJev) got here, on the same 101 PRs:
+How SlopGate got here, on the same 101 PRs:
 
 | Version | What changed | Spam caught | Precision | False alarms on merged PRs |
 |---|---|---|---|---|
 | v1 | Rules written before we saw any data | 22% | 87% | 5% |
 | v2 | + swarm detection | 25% | 83% | 7% |
-| v3 | + CodeRabbit's trusted-author rule, bot text and template comments stripped, unfilled-template fact | **28%** | **100%** | **0%** |
+| v3 | + CodeRabbit's trusted-author rule, bot text and template comments stripped, unfilled-template fact | 28% | 100% | 0% |
+| v4 (final) | + anti-slop's 34 rules, fused with the read | **52%** | **97%** | **2%** |
 
 - **Every v2 false alarm was a PR by the repo's owner or a collaborator.** CodeRabbit and anti-slop
   never judge those authors for spam, and adopting the same rule removed all of them.
@@ -150,6 +168,7 @@ How SlopGate (OpenJev) got here, on the same 101 PRs:
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 25/25 | 100% | 92% | 0% | 100% | 4.2 s | 259 ms | 1617 |
 | SlopGate · OpenJev | System One | 25/25 | 39% | 90% | 0% | 50% | 1.2 s | 259 ms | 1617 |
 | SlopGate · Clef-flash | System One | 25/25 | 17% | 80% | 17% | 50% | 897 ms | 107 ms | 2178 |
 | DiffusionGemma 26B as chat | Chat LLM | 24/25 | 18% | 100% | 5% | 0% | 1.1 s | 366 ms | 1370 |
@@ -160,25 +179,27 @@ How SlopGate (OpenJev) got here, on the same 101 PRs:
 
 | Contender | Kind | Judged | Spam caught (recall) | Precision | Spam fast-tracked | False alarms on merged PRs | Median time | Model time | Tokens / PR |
 |---|---|---|---|---|---|---|---|---|---|
+| SlopGate · final | Read + rules | 74/74 | 57% | 92% | 2% | 6% | 3.7 s | 314 ms | 1979 |
 | SlopGate · OpenJev | System One | 74/74 | 22% | 90% | 2% | 3% | 1.1 s | 314 ms | 1979 |
 | SlopGate · Clef-flash | System One | 74/74 | 10% | 80% | 30% | 3% | 899 ms | 134 ms | 2496 |
 | DiffusionGemma 26B as chat | Chat LLM | 73/74 | 26% | 100% | 23% | 0% | 1.2 s | 387 ms | 1740 |
 | CodeRabbit | Observed | 58/74 | 3% | 100% | - | 0% | 75.5 s | - | - |
 | anti-slop (34 rules) | Rules | 74/74 | 48% | 63% | 52% | 32% | 3.7 s | - | - |
 
-On PRs it had never seen, SlopGate (OpenJev) caught **7× more spam than CodeRabbit** (22% vs 3%;
-39% vs 7% among outside contributors), answered in about a second instead of a minute or more, and
-waved only **1 of 40 spam PRs** through to fast-track. A chat model given SlopGate's facts caught a
-little more spam with no false alarms, but fast-tracked **23%** of the spam, the one mistake a gate
-must not make. SlopGate's one false alarm,
-[PYSCHECARE#445](https://github.com/Shaurya1907/PYSCHECARE-main/pull/445), is a 3-line "code quality"
-change whose entire description was written by CodeRabbit; it was merged.
+**On PRs it had never seen, SlopGate's final call beat every other judge where it matters for a gate.**
+It caught **57%** of the spam, against 48% for anti-slop alone and 3% for CodeRabbit; it was right
+**92%** of the time it said spam (anti-slop: 63%); it raised **2** false alarms on 34 merged PRs
+(anti-slop would have closed **11**); and it waved only **1 of 40** spam PRs through to fast-track
+(anti-slop: 21). A chat model given the same facts was more precise when it spoke (100%) but caught
+less than half as much (26%) and fast-tracked 23% of the spam.
 
-**anti-slop makes the opposite trade.** Its 34 rules catch the most spam from outside contributors
-(71–74%), but they would have closed 11 of the 34 good, merged PRs in the held-out set (32%), and
-10% on the main set, because anti-slop closes a PR once enough rules fail. SlopGate catches less,
-raises almost no false alarms, and never closes anything. A maintainer who wants both could run
-anti-slop's rules as one more input to SlopGate's read rather than as an auto-closer.
+How the fusion rule was chosen, so the held-out numbers stay honest: four candidate rules were written
+down first and compared on the main set only. "Untrusted author and enough failed rules, or the read
+says spam" won there, and 2 failed rules gave the best recall at the same false-alarm count, so 2 is the
+default. The held-out set confirmed it. (With 3, held out: 55% caught, 96% precision, 1 false alarm.)
+
+The price is time: anti-slop makes about 50 GitHub API calls per PR, so the final call takes a few
+seconds instead of a fraction of one. Still well ahead of CodeRabbit's minute or more.
 
 ### How the test works
 
@@ -257,9 +278,10 @@ Everything is open: point `OPENJEV_BASE_URL` at your own GPU running the
 [OpenJev server](https://github.com/razorback16/openjev) (Apache-2.0) and no PR ever leaves your
 infrastructure.
 
-Contenders we compare against, not part of SlopGate: [anti-slop](https://github.com/peakoss/anti-slop)
-(AGPL-3.0, run unmodified as a separate process, not distributed) and CodeRabbit (its public PR
-comments only).
+[anti-slop](https://github.com/peakoss/anti-slop) is AGPL-3.0. SlopGate does not copy or link its code: it
+runs the unmodified action as a separate program (`node dist/index.mjs`, cloned at install time) and
+reads its outputs, so SlopGate itself stays MIT. Thank you to its authors. CodeRabbit appears only in
+the evaluation, through its public PR comments.
 
 ## Safety
 

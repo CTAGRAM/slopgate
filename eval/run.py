@@ -22,9 +22,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from slopgate import config  # noqa: E402
-from slopgate.arena import contenders, run_safely  # noqa: E402
+from slopgate.arena import FINAL, Opinion, contenders, final_opinion, run_safely  # noqa: E402
 from slopgate.github import GitHub, PullRequest  # noqa: E402
-from slopgate.judge import TRUSTED, build_state  # noqa: E402
+from slopgate.judge import TRUSTED, build_state, is_trusted  # noqa: E402
 
 DATA = Path(__file__).parent / "data"
 RESULTS = Path(__file__).parent / "results"
@@ -105,8 +105,27 @@ def table(title: str, names: list[str], folder: Path, data) -> tuple[list[str], 
     return lines, scores
 
 
+def derive_final(folder: Path, data) -> None:
+    """SlopGate's final call on each PR, rebuilt from the saved read and rules with the production function."""
+    reads, rules = answers(folder, "SlopGate · OpenJev"), answers(folder, "anti-slop (34 rules)")
+    lines = []
+    for pr, label in data:
+        if pr.url not in reads or pr.url not in rules:
+            continue
+        r = Opinion(**rules[pr.url]["opinion"])
+        if r.extra is None and not r.error:  # answers saved before the per-check details were kept
+            m = re.match(r"\w+: (\d+)/(\d+)", r.detail)
+            r.extra = {"failed": int(m.group(1)), "total": int(m.group(2)), "checks": []} if m else None
+        o = final_opinion(Opinion(**reads[pr.url]["opinion"]), r, is_trusted(pr))
+        lines.append(json.dumps({"url": pr.url, "label": label, "opinion": dataclasses.asdict(o)}))
+    if lines:
+        (folder / f"{slug(FINAL)}.jsonl").write_text("\n".join(lines) + "\n")
+
+
 def report(set_name: str, names: list[str], data) -> None:
     folder = RESULTS / set_name
+    derive_final(folder, data)
+    names = [FINAL] + [n for n in names if n != FINAL]
     # Outside contributors: the people spam actually comes from, and the only ones CodeRabbit's slop
     # detection (and SlopGate, by default) judge. Owners' "spam" PRs in this data are forks running
     # upstream's labelling automation on their own PRs, not a maintainer's judgement.

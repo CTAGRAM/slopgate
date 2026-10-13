@@ -18,9 +18,9 @@ from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 
 from . import config
-from .arena import contenders, run_safely
+from .arena import FINAL, contenders, final_opinion, run_safely
 from .escalate import system_two
-from .judge import build_state, fact_values, facts
+from .judge import build_state, fact_values, facts, is_trusted
 from .pipeline import SlopGate, summary
 
 log = logging.getLogger("uvicorn.error")
@@ -122,10 +122,19 @@ def arena_stream(url: str):
         yield _sse("pr", {"url": pr.url, "title": pr.title, "repo": f"{pr.owner}/{pr.repo}",
                           "number": pr.number, "author": pr.author, "facts": facts(pr), "info": fact_values(pr)})
         state, field = build_state(pr), _field()
-        yield _sse("start", {"contenders": [{"name": c.label} for c in field]})
+        names = [c.label for c in field]
+        final = "SlopGate · OpenJev" in names and "anti-slop (34 rules)" in names
+        yield _sse("start", {"contenders": [{"name": n} for n in ([FINAL] if final else []) + names]})
+        got = {}
         with ThreadPoolExecutor(len(field)) as pool:
             for done in as_completed([pool.submit(run_safely, c, pr, state) for c in field]):
-                yield _sse("opinion", asdict(done.result()))
+                o = done.result()
+                got[o.contender] = o
+                yield _sse("opinion", asdict(o))
+                if final and "SlopGate · OpenJev" in got and "anti-slop (34 rules)" in got and FINAL not in got:
+                    got[FINAL] = final_opinion(got["SlopGate · OpenJev"], got["anti-slop (34 rules)"],
+                                               is_trusted(pr, settings.judge_all_authors))
+                    yield _sse("opinion", asdict(got[FINAL]))
         yield _sse("done", {})
 
     return StreamingResponse(events(), media_type="text/event-stream",

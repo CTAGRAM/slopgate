@@ -87,10 +87,16 @@ on them. The misses taught me three things:
 3. **Review bots write into PR descriptions.** In 34 of 74 PRs, CodeRabbit had edited its summary
    into the description. SlopGate now strips bot-written text, so it judges the contributor's words.
 
-Then I tested on 74 PRs it had never seen, where CodeRabbit had reviewed every one. SlopGate caught
-**7× more spam than CodeRabbit**, answered in about a second instead of a minute or more, and waved
-only **1 of 40** spam PRs through to fast-track. The popular rule-based filter anti-slop caught more spam from outside contributors, but would have auto-closed 11 of the 34 good PRs; SlopGate never closes anything. It is not perfect: it catches about a quarter of
-labelled spam overall, and the README shows every number, including the misses.
+4. **Rules and a model see different things.** The open-source anti-slop filter checks an author's
+   merge history and profile; a model can't see those, but it can tell whether a diff does what it
+   claims. So SlopGate now runs anti-slop's 34 rules, unmodified, alongside the read and fuses them.
+
+Then I tested on 74 PRs it had never seen, where CodeRabbit had reviewed every one. SlopGate's final call caught
+**57%** of the spam (anti-slop alone: 48%, CodeRabbit: 3%), was right **92%** of the times it said spam
+(anti-slop: 63%), raised 2 false alarms where anti-slop would have closed 11 good PRs, and waved only
+**1 of 40** spam PRs through to fast-track. The rule that fuses the two was chosen on a separate set
+of 101 PRs first, so these numbers are not tuned to the test. The README shows every number,
+including the misses.
 
 ## Why Open Innovation Matters
 

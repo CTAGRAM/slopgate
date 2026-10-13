@@ -10,6 +10,7 @@ token and refuses every write; the writes it tries are what we record as its ver
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -105,13 +106,20 @@ def _outputs(path: Path) -> dict[str, str]:
     return out
 
 
-def contender(token: str):
-    if not (VENDOR / "dist" / "index.mjs").exists():
-        raise SystemExit(f"clone anti-slop first: git clone --depth 1 https://github.com/peakoss/anti-slop {VENDOR}")
-    proxy = ReadOnlyProxy(token)
-    defaults = _defaults()
+FAILED_CHECK = re.compile(r"^\[FAIL\] (\S+) \S (.*)$", re.M)
 
-    def run(pr: PullRequest, state: str) -> Opinion:
+
+class AntiSlop:
+    """Runs the unmodified anti-slop action on one PR and reports what its rules found."""
+
+    def __init__(self, token: str):
+        if not available():
+            raise RuntimeError(f"anti-slop needs Node and a checkout in {VENDOR}")
+        self.proxy = ReadOnlyProxy(token)
+        self.defaults = _defaults()
+
+    def check(self, pr: PullRequest) -> dict:
+        proxy = self.proxy
         pull = httpx.get(f"{proxy.url}/repos/{pr.owner}/{pr.repo}/pulls/{pr.number}").json()
         repo = httpx.get(f"{proxy.url}/repos/{pr.owner}/{pr.repo}").json()
         before, failures_before = len(proxy.blocked), proxy.failures
@@ -120,25 +128,39 @@ def contender(token: str):
             (tmp / "event.json").write_text(json.dumps(
                 {"action": "opened", "number": pr.number, "pull_request": pull, "repository": repo, "sender": pull["user"]}))
             (tmp / "out").touch()
-            env = os.environ | defaults | {
+            (tmp / "summary.md").touch()
+            env = os.environ | self.defaults | {
                 "GITHUB_API_URL": proxy.url, "GITHUB_EVENT_NAME": "pull_request_target",
                 "GITHUB_EVENT_PATH": str(tmp / "event.json"), "GITHUB_REPOSITORY": f"{pr.owner}/{pr.repo}",
                 "GITHUB_OUTPUT": str(tmp / "out"), "GITHUB_STEP_SUMMARY": str(tmp / "summary.md"),
                 "GITHUB_ACTIONS": "false", "RUNNER_DEBUG": "0",
             }
             start = time.perf_counter()
-            subprocess.run(["node", str(VENDOR / "dist" / "index.mjs")], env=env, capture_output=True, timeout=120)
+            run = subprocess.run(["node", str(VENDOR / "dist" / "index.mjs")], env=env, capture_output=True,
+                                 text=True, timeout=120)
             seconds = time.perf_counter() - start
             out = _outputs(tmp / "out")
-        result = out.get("result", "error")
-        tried = proxy.blocked[before:]
-        detail = f"{out.get('failed-checks', '?')}/{out.get('total-checks', '?')} checks failed"
-        if tried:
-            detail += f"; would have: {', '.join(sorted({t.split()[0] for t in tried}))}"
         failures = proxy.failures - failures_before
-        error = "no result" if result == "error" else f"{failures} GitHub API errors" if failures else None
-        return Opinion("anti-slop (34 rules)", "Rules", "spam" if result == "failed" else "fast_track",
-                       None, seconds, None, f"{result}: {detail}", error)
+        return {
+            "result": out.get("result", "error"),
+            "failed": int(out.get("failed-checks", 0) or 0), "total": int(out.get("total-checks", 0) or 0),
+            "checks": [{"name": n, "why": w.strip()} for n, w in FAILED_CHECK.findall(run.stdout)],
+            "blocked_writes": proxy.blocked[before:], "seconds": seconds,
+            "error": "no result" if "result" not in out else f"{failures} GitHub API errors" if failures else None,
+        }
+
+
+def contender(token: str):
+    rules = AntiSlop(token)
+
+    def run(pr: PullRequest, state: str) -> Opinion:
+        r = rules.check(pr)
+        detail = f"{r['result']}: {r['failed']}/{r['total']} checks failed"
+        if r["blocked_writes"]:
+            detail += f"; would have: {', '.join(sorted({t.split()[0] for t in r['blocked_writes']}))}"
+        return Opinion("anti-slop (34 rules)", "Rules", "spam" if r["result"] == "failed" else "fast_track",
+                       None, r["seconds"], None, detail, r["error"],
+                       extra={"failed": r["failed"], "total": r["total"], "checks": r["checks"]})
     run.label = "anti-slop (34 rules)"
     return run
 

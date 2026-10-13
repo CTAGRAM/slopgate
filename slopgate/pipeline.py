@@ -1,10 +1,12 @@
 """Fetch -> read -> escalate if unsure -> label and comment. Shared by the CLI and the server."""
 
-from . import report
+from concurrent.futures import ThreadPoolExecutor
+
+from . import antislop, report
 from .config import Settings
 from .escalate import second_opinion
 from .github import GitHub, PullRequest
-from .judge import Triage, judge
+from .judge import Triage, apply_rules, classify_spam, is_trusted, judge
 from .openjev import OpenJev
 
 
@@ -13,10 +15,19 @@ class SlopGate:
         self.settings = settings
         self.github = GitHub(settings.github_token)
         self.model = OpenJev(settings.openjev_url, settings.openjev_key, settings.model)
+        self.rules = antislop.AntiSlop(settings.github_token) if antislop.available() else None
+        self._pool = ThreadPoolExecutor(4)
 
     def triage(self, url: str, escalate: bool = True) -> tuple[PullRequest, Triage]:
         pr = self.github.pull_request(url)
+        # anti-slop's rules run alongside the model read, so they add little to the wait
+        rules = self._pool.submit(self.rules.check, pr) if self.rules else None
         state, t = judge(pr, self.model, self.settings.judge_all_authors)
+        try:
+            checked = rules.result(timeout=120) if rules else None
+        except Exception:  # noqa: BLE001 - without the rules, the read alone decides
+            checked = None
+        t = classify_spam(apply_rules(t, checked, is_trusted(pr, self.settings.judge_all_authors)), state, self.model)
         if escalate and t.uncertain:
             t = second_opinion(self.settings, state, t)
         return pr, t
@@ -40,4 +51,5 @@ def summary(pr: PullRequest, t: Triage) -> dict:
         "probabilities": {k: round(v, 3) for k, v in t.probabilities.items()},
         "effort": round(t.effort, 2), "notes": t.notes, "second_opinion": t.second_opinion,
         "model": r.model, "server_ms": r.server_ms, "wall_ms": round(r.wall_ms), "input_tokens": r.input_tokens,
+        "rules": {k: t.rules[k] for k in ("failed", "total", "checks")} if t.rules and not t.rules.get("error") else None,
     }
