@@ -10,6 +10,7 @@ Contenders:
 import json
 import re
 import time
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Callable
@@ -18,7 +19,8 @@ import httpx
 
 from .config import Settings
 from .github import GitHub, PullRequest, _ts
-from .judge import VERDICTS, classify_spam, decide, fused_verdict, is_trusted, questions, swarm_size
+from .judge import VERDICTS, classify_spam, decide, fact_values, fused_verdict, is_trusted, questions, swarm_size
+from .plain import explain
 from .openjev import OpenJev
 
 
@@ -43,7 +45,7 @@ def system_one(settings: Settings, model_id: str, name: str) -> Contender:
     model = OpenJev(settings.openjev_url, settings.openjev_key, model_id)
 
     def run(pr: PullRequest, state: str) -> Opinion:
-        start = time.perf_counter()
+        start, facts = time.perf_counter(), fact_values(pr)
         t = decide(model.ask(state, questions(pr)), swarm_size(pr), is_trusted(pr, settings.judge_all_authors))
         t = classify_spam(t, state, model)  # one more small read, only for spam
         r, seconds = t.reading, time.perf_counter() - start
@@ -54,7 +56,8 @@ def system_one(settings: Settings, model_id: str, name: str) -> Contender:
                        model_seconds=r.server_ms / 1000 if r.server_ms else None,
                        extra={"probabilities": t.probabilities, "confidence": t.confidence, "notes": t.notes,
                               "uncertain": t.uncertain, "flags": t.flags, "spam_type": t.spam_type,
-                              "area": t.area, "questions": len(r.answers)})
+                              "area": t.area, "questions": len(r.answers), "facts": facts,
+                              "plain": explain(t.verdict, t.spam_type, t.flags, t.probabilities, facts, None, t.uncertain)})
     run.label, run.kind_hint = name, "System One"
     return run
 
@@ -115,7 +118,11 @@ def coderabbit_observed(gh: GitHub) -> Contender:
                     if c["user"]["login"] == CODERABBIT]
         reviews = [r for r in gh._get(f"{base}/pulls/{pr.number}/reviews", per_page=100)
                    if r["user"]["login"] == CODERABBIT]
+        age = (datetime.now(timezone.utc) - pr.created_at).total_seconds()
         if not comments and not reviews:
+            if age < 1800:  # a fresh PR: CodeRabbit simply hasn't answered yet
+                return Opinion("CodeRabbit", "Observed", None, None, None, detail="still reviewing",
+                               extra={"pending": True, "opened_at": pr.created_at.isoformat()})
             return Opinion("CodeRabbit", "Observed", None, None, None, detail="not installed on this repo")
         text = " ".join((c.get("body") or "") for c in comments + reviews).lower()
         first_review = min((_ts(r["submitted_at"]) for r in reviews), default=None)
@@ -128,6 +135,9 @@ def coderabbit_observed(gh: GitHub) -> Contender:
             seconds = (_ts(flagged["updated_at"]) - pr.created_at).total_seconds()
             return Opinion("CodeRabbit", "Observed", "spam", None, seconds,
                            detail=f"flagged as potential spam ({flag.group(1) or 'slop'})")
+        if not reviews and age < 1800 and "review skipped" not in text:  # summary is up, the review isn't
+            return Opinion("CodeRabbit", "Observed", None, None, None, detail="summary posted, still reviewing",
+                           extra={"pending": True, "opened_at": pr.created_at.isoformat()})
         if "review skipped" in text or "not reviewed" in text:
             return Opinion("CodeRabbit", "Observed", None, None, seconds, detail="skipped the review")
         actionable = re.search(r"actionable comments posted: (\d+)", text)
@@ -168,9 +178,13 @@ def final_opinion(read: Opinion, rules: Opinion, trusted: bool) -> Opinion:
     detail = (f"{failed}/{rules.extra['total']} rule checks failed" + (f" ({names})" if names else "")
               if failed is not None else "rules unavailable") + f"; read: {read.verdict}"
     seconds = max(x for x in (read.seconds, rules.seconds) if x is not None) if read.seconds or rules.seconds else None
+    x = read.extra or {}
+    plain = explain(verdict, x.get("spam_type"), x.get("flags"), x.get("probabilities"), x.get("facts"),
+                    rules.extra if failed is not None else None,
+                    x.get("uncertain") and verdict == read.verdict) if verdict else None
     return Opinion(FINAL, "Read + rules", verdict, read.p_spam, seconds, read.tokens, detail, read.error,
-                   read.model_seconds, {**(read.extra or {}), "rules": rules.extra, "trusted": trusted,
-                                        "read_verdict": read.verdict})
+                   read.model_seconds, {**x, "rules": rules.extra, "trusted": trusted,
+                                        "read_verdict": read.verdict, "plain": plain})
 
 
 def run_safely(c: Contender, pr: PullRequest, state: str) -> Opinion:

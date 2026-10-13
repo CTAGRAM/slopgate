@@ -7,6 +7,7 @@ from .config import Settings
 from .escalate import second_opinion
 from .github import GitHub, PullRequest
 from .events import Emit, quiet
+from .plain import explain
 from .judge import Triage, apply_rules, classify_spam, fact_values, is_trusted, judge
 from .openjev import OpenJev
 
@@ -47,8 +48,9 @@ class SlopGate:
             checked = None
             emit("rules_done", error=str(e)[:200])
         t = classify_spam(apply_rules(t, checked, trusted), state, self.model)
+        t.plain = explain(t.verdict, t.spam_type, t.flags, t.probabilities, fact_values(pr), t.rules, t.uncertain)
         emit("fused", verdict=t.verdict, flags=list(t.flags), spam_type=t.spam_type, uncertain=t.uncertain,
-             confidence=t.confidence, notes=list(t.notes))
+             confidence=t.confidence, notes=list(t.notes), plain=t.plain)
         if escalate and t.uncertain:
             emit("escalated")
             t = second_opinion(self.settings, state, t)
@@ -75,4 +77,5 @@ def summary(pr: PullRequest, t: Triage) -> dict:
         "effort": round(t.effort, 2), "notes": t.notes, "second_opinion": t.second_opinion,
         "model": r.model, "server_ms": r.server_ms, "wall_ms": round(r.wall_ms), "input_tokens": r.input_tokens,
         "rules": {k: t.rules[k] for k in ("failed", "total", "checks")} if t.rules and not t.rules.get("error") else None,
+        "plain": t.plain,
     }

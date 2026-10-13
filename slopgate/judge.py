@@ -68,6 +68,7 @@ class Triage:
     notes: list[str] = field(default_factory=list)
     spam_type: str | None = None
     rules: dict | None = None  # anti-slop's checks on this PR, when they ran
+    plain: str | None = None  # the verdict in plain English
 
 
 # --- state ------------------------------------------------------------------------
@@ -116,6 +117,8 @@ def fact_values(pr: PullRequest) -> dict:
         "additions": sum(f.get("additions", 0) for f in pr.files),
         "deletions": sum(f.get("deletions", 0) for f in pr.files), "files": len(pr.files),
         "swarm": swarm_size(pr), "unfilled_template": unfilled_template(pr),
+        "own_name": any(pr.author.lower() in line.lower()
+                        for f in pr.files for line in _changed_lines(f.get("patch") or "")[0]),
         "linked_issue": pr.linked_issue["number"] if pr.linked_issue else None,
         "association": pr.author_association,
     }

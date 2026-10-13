@@ -283,6 +283,9 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
     </div>
 
     <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+      <div style="display:flex;gap:6px;align-items:center"><span style="font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#8A8E95;margin-right:4px">Live</span>
+        <button onClick="{{ toggleLive }}" title="Wait for the next PR from GitHub's webhook and judge it the moment it arrives" style="height:32px;white-space:nowrap;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:7px;border:1px solid {{ liveBtn.border }};background:{{ liveBtn.bg }};color:{{ liveBtn.color }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ liveBtn.dot }};animation:{{ liveBtn.anim }}"></span>{{ liveBtn.label }}</button>
+      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span style="font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#8A8E95;margin-right:4px">Demo PRs</span>
         <sc-for list="{{ presetsDemo }}" as="p" hint-placeholder-count="4"><button data-id="{{ p.id }}" onClick="{{ pickPreset }}" style="height:32px;white-space:nowrap;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid {{ p.border }};background:{{ p.bg }};color:{{ p.color }}">{{ p.label }}</button></sc-for>
       </div>
@@ -299,6 +302,17 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
         <span>race <strong style="color:#14161A;font-family:'JetBrains Mono',monospace">{{ raceClock }}</strong></span>
       </div>
     </div>
+
+    <sc-if value="{{ plain.show }}" hint-placeholder-val="{{ false }}">
+    <div style="background:linear-gradient(160deg,rgba(15,26,21,.97),rgba(15,26,21,.9));color:#F2F4EF;border-radius:14px;padding:20px 24px;display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;box-shadow:0 30px 60px -24px rgba(15,26,21,.55);animation:gfUp .4s ease">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:170px">
+        <div style="font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#9CD3AE">The verdict in plain English</div>
+        <span style="font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;width:max-content;background:{{ plain.vbg }};color:{{ plain.vfg }}">{{ plain.vlabel }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7F8A82">{{ plain.by }}</span>
+      </div>
+      <div style="flex:1;min-width:280px;font-size:17px;line-height:1.55;font-weight:500;text-wrap:pretty">{{ plain.text }}</div>
+    </div>
+    </sc-if>
 
     <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
       <sc-for list="{{ terms }}" as="t" hint-placeholder-count="5">
@@ -706,39 +720,62 @@ class Component extends DCLogic {
   state = (() => {
     let page = 'gate';
     try { page = localStorage.getItem('slopgate.page') || 'gate'; } catch(e) {}
-    return {page, feed:[], status:null, dash:null, sel:'d3', arena:null, now:Date.now(), cm:'fin', set:'heldout', perfJ:'fin', thr:.8, max:null};
+    return {page, feed:[], status:null, dash:null, sel:'d3', arena:null, liveArena:false, now:Date.now(), cm:'fin', set:'heldout', perfJ:'fin', thr:.8, max:null};
   })();
 
   componentDidMount() {
     this.tick = setInterval(()=>this.setState({now:Date.now()}), 100);
     this.poll = setInterval(()=>this.load(), 15000);
     this.live = new EventSource('/api/events');  // instant updates as the gate finishes each PR
-    this.live.addEventListener('stage', e => { const d = JSON.parse(e.data); if (d.stage === 'done' || d.stage === 'failed') this.load(); });
+    this.live.addEventListener('stage', e => {
+      const d = JSON.parse(e.data);
+      if (d.stage === 'done' || d.stage === 'failed') this.load();
+      // Real time: a PR just arrived from GitHub's webhook, so race every judge on it right away
+      if (d.stage === 'received' && d.source === 'webhook' && this.state.liveArena) this.run(d.url, 'live');
+    });
     this.load();
     fetch('/api/dashboard').then(r=>r.json()).then(dash=>this.setState({dash})).catch(()=>{});
     this.onKey = e => { if (e.key==='Escape' && this.state.max) this.setState({max:null}); };
     window.addEventListener('keydown', this.onKey);
     if (this.state.page === 'arena') this.run(PRESETS.find(p=>p.id===this.state.sel).url);
   }
-  componentWillUnmount() { clearInterval(this.tick); clearInterval(this.poll); if (this.live) this.live.close(); if (this.es) this.es.close(); window.removeEventListener('keydown', this.onKey); }
+  componentWillUnmount() { clearInterval(this.tick); clearInterval(this.poll); clearInterval(this.crPoll); if (this.live) this.live.close(); if (this.es) this.es.close(); window.removeEventListener('keydown', this.onKey); }
   load() {
     fetch('/feed').then(r=>r.json()).then(feed=>this.setState({feed})).catch(()=>{});
     fetch('/api/status').then(r=>r.json()).then(status=>this.setState({status})).catch(()=>{});
   }
+  watchCodeRabbit(url) {
+    // CodeRabbit reviews on GitHub in minutes; keep checking until its review lands (for up to 15 minutes)
+    clearInterval(this.crPoll);
+    const until = Date.now() + 15 * 60000;
+    this.crPoll = setInterval(() => {
+      if (Date.now() > until || !this.state.arena || this.state.arena.url !== url) return clearInterval(this.crPoll);
+      fetch('/api/coderabbit?url=' + encodeURIComponent(url)).then(r => r.json()).then(o => {
+        if (o.extra && o.extra.pending) return;
+        clearInterval(this.crPoll);
+        this.setState(s => ({arena:{...s.arena, judges:s.arena.judges.map(j => j.name === 'CodeRabbit' ? {...j, op:o, at:Date.now()} : j)}}));
+      }).catch(() => {});
+    }, 20000);
+  }
   run(url, sel) {
     if (this.es) this.es.close();
+    clearInterval(this.crPoll);
     const t0 = Date.now();
     this.setState({arena:{url, pr:null, judges:[], t0, running:true, error:null}, ...(sel ? {sel} : {})});
     const es = this.es = new EventSource('/arena/stream?url='+encodeURIComponent(url));
     const upd = f => this.setState(s=>({arena:{...s.arena, ...f(s.arena)}}));
     es.addEventListener('pr', e => upd(()=>({pr:JSON.parse(e.data)})));
     es.addEventListener('start', e => upd(()=>({judges:JSON.parse(e.data).contenders.map(c=>({name:c.name, op:null, at:null}))})));
-    es.addEventListener('opinion', e => { const o = JSON.parse(e.data); upd(a=>({judges:a.judges.map(j=>j.name===o.contender ? {...j, op:o, at:Date.now()} : j)})); });
+    es.addEventListener('opinion', e => {
+      const o = JSON.parse(e.data);
+      upd(a=>({judges:a.judges.map(j=>j.name===o.contender ? {...j, op:o, at:Date.now()} : j)}));
+      if (o.contender === 'CodeRabbit' && o.extra && o.extra.pending) this.watchCodeRabbit(url);
+    });
     es.addEventListener('fail', e => { upd(()=>({error:JSON.parse(e.data).error, running:false})); es.close(); });
     es.addEventListener('done', () => { upd(()=>({running:false})); es.close(); });
     es.onerror = () => { upd(()=>({running:false})); es.close(); };
   }
-  go(page) { if (page === 'sim') { window.location.href = '/sim'; return; } try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page}); if (page === 'arena' && !this.state.arena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
+  go(page) { if (page === 'sim') { window.location.href = '/sim'; return; } try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page}); if (page === 'arena' && !this.state.arena && !this.state.liveArena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
 
   renderVals() {
     const s = this.state, now = s.now, D = s.dash, st = s.status || {};
@@ -803,6 +840,10 @@ class Component extends DCLogic {
     const A = s.arena, P = PRESETS.find(x=>x.id===s.sel);
     const pBtn = x => ({...x, bg:x.id===s.sel?'#14161A':'rgba(255,255,255,.7)', color:x.id===s.sel?'#fff':'#14161A', border:x.id===s.sel?'#14161A':'#E5E3DD'});
     const pr = A && A.pr, info = (pr && pr.info) || {};
+    const waiting = s.liveArena && !A;
+    const liveBtn = s.liveArena
+      ? {label: waiting ? 'Waiting for a PR…' : 'Real time · on', bg:'#14161A', color:'#fff', border:'#14161A', dot:'#9CD3AE', anim:'gfPulse 2s infinite'}
+      : {label:'Real time', bg:'rgba(255,255,255,.7)', color:'#14161A', border:'#E5E3DD', dot:'#A9ADB4', anim:'none'};
     const el = A ? now - A.t0 : 0;
     const judges = A ? A.judges : [];
     const terms = judges.map(j=>{
@@ -810,6 +851,12 @@ class Component extends DCLogic {
       if (!o) return {name:j.name,color:js.color,kind:js.kind,status:A.running?'running':'stopped',statusColor:'#E0B95E',timer:fmtMs(el),prog:Math.min(95, el/50)+'%',
         border:'rgba(255,255,255,.07)',cursor:A.running,lines:[{text:js.kind==='read + 34 rules'?'$ waiting for the read and the rules…':js.kind==='system one'?'$ slopgate triage …':js.kind==='as posted'?'> reading what it posted on GitHub…':js.kind==='34 rules'?'$ anti-slop …':'> waiting for the reply…',c:'#7F8A82'}],
         vlabel:V.wait.label,vbg:V.wait.bg,vfg:V.wait.fg,foot:''};
+      if (o.extra && o.extra.pending) {
+        const since = now - Date.parse(o.extra.opened_at);
+        return {name:j.name,color:js.color,kind:js.kind,status:'reviewing on GitHub',statusColor:'#E0B95E',timer:fmtMs(since),prog:Math.min(95, since/6000)+'%',
+          border:'rgba(224,185,94,.35)',cursor:true,lines:[{text:'> CodeRabbit is reviewing this PR on GitHub',c:'#E6EBE7'},{text:'> '+o.detail+' · re-checking every 20 s',c:'#7F8A82'}],
+          vlabel:'reviewing…',vbg:V.wait.bg,vfg:V.wait.fg,foot:'timer: since the PR opened'};
+      }
       const k = o.error ? 'err' : o.verdict ? ((o.extra&&o.extra.flags||[]).includes('injection') ? 'inj' : VKEY[o.verdict]) : 'none';
       const observed = o.kind === 'Observed';
       return {name:j.name,color:js.color,kind:js.kind,status:o.error?'error':observed?'observed':'done',statusColor:o.error?'#F1B4B4':'#9CD3AE',
@@ -821,6 +868,7 @@ class Component extends DCLogic {
     const order = [...doneJ, ...judges.filter(j=>!doneJ.includes(j))].map((j,i)=>{
       const js = jstyle(j.name), o = j.op;
       if (!o) return {name:j.name,color:js.color,rank:'…',rankColor:'#14161A',time:'running',vlabel:'judging…',vbg:'#F0EFEA',vfg:'#6A6E75',p:'—',tok:'—',reason:'…',op:1};
+      if (o.extra && o.extra.pending) return {name:j.name,color:js.color,rank:'…',rankColor:'#14161A',time:fmtMs(now - Date.parse(o.extra.opened_at))+' and counting',vlabel:'reviewing…',vbg:'#F0EFEA',vfg:'#6A6E75',p:'—',tok:'—',reason:o.detail,op:1};
       const k = o.error ? 'err' : o.verdict ? ((o.extra&&o.extra.flags||[]).includes('injection') ? 'inj' : VKEY[o.verdict]) : 'none';
       const ranked = doneJ.includes(j);
       return {name:j.name,color:js.color,rank:ranked?String(i+1):'—',rankColor:i===0&&ranked?'#2F6B4F':'#A9ADB4',time:o.seconds==null?'—':fmtMs(o.seconds*1000)+(o.kind==='Observed'?' (on GitHub)':''),
@@ -932,9 +980,18 @@ class Component extends DCLogic {
       ],
       kpis, feed, mix, ticker, threatFeed,
       presetsDemo:PRESETS.filter(x=>x.group==='demo').map(pBtn), presetsReal:PRESETS.filter(x=>x.group==='real').map(pBtn),
-      pickPreset:e=>{const id=e.currentTarget.dataset.id;this.run(PRESETS.find(p=>p.id===id).url, id);},
-      rerun:()=>this.run(A ? A.url : P.url),
-      pr:{repo:pr?pr.repo:(A&&A.error?'—':'loading'),num:pr?pr.number:'',author:pr?pr.author:'…',title:pr?pr.title:(A&&A.error?A.error:'Reading the pull request…'),diff:sizeTxt,truth:P?P.truth:'unknown'},
+      pickPreset:e=>{const id=e.currentTarget.dataset.id;this.setState({liveArena:false});this.run(PRESETS.find(p=>p.id===id).url, id);},
+      liveBtn, toggleLive:()=>{
+        if (this.state.liveArena) return this.setState({liveArena:false});
+        if (this.es) this.es.close(); clearInterval(this.crPoll);
+        this.setState({liveArena:true, sel:'live', arena:null});
+      },
+      plain:(()=>{ const op = (finOp && finOp.extra && finOp.extra.plain) ? finOp : (ojOp && ojOp.extra && ojOp.extra.plain) ? ojOp : null;
+        if (!op) return {show:false};
+        const k = (op.extra.flags||[]).includes('injection') ? 'inj' : VKEY[op.verdict] || 'none';
+        return {show:true, text:op.extra.plain, vlabel:V[k].label, vbg:VB[k], vfg:VL[k], by:op===finOp ? 'SlopGate · final call' : 'SlopGate · OpenJev read'}; })(),
+      rerun:()=>{ if (A) this.run(A.url, s.sel); else if (P) this.run(P.url); },
+      pr:waiting ? {repo:'CTAGRAM/slopgate-demo',num:'',author:'anyone',title:'Waiting for the next pull request… open one from your terminal: demo/flood.sh 1 0 spam',diff:'—',truth:'live'} : {repo:pr?pr.repo:(A&&A.error?'—':'loading'),num:pr?pr.number:'',author:pr?pr.author:'…',title:pr?pr.title:(A&&A.error?A.error:'Reading the pull request…'),diff:sizeTxt,truth:s.sel==='live'?'live · from the webhook':P?P.truth:'unknown'},
       raceClock:fmtMs(A ? (A.running ? el : Math.max(0,...judges.filter(j=>j.at).map(j=>j.at-A.t0))) : 0), terms, order, facts, qs, rule,
       boardKicker:set?'Proof on real PRs · '+set.n+' PRs · '+set.repos+' repos':'Proof on real PRs',
       boardSub:set?(s.set==='heldout'?'PRs CodeRabbit reviewed, never used to build SlopGate. ':'The set SlopGate was tuned on. ')+set.spam+' labelled spam by maintainers, '+(set.n-set.spam)+' merged.':'Loading…',

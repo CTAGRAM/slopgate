@@ -502,6 +502,8 @@ function renderPanel() {
     if (fin.spam_type) row.append(el('span', 'sub mono', fin.spam_type.replace(/_/g, '-')));
     if (r.done && r.done.labels && r.done.labels.length) row.append(el('span', 'sub mono', '→ ' + r.done.labels.join(', ')));
     body.append(row);
+    const plain = (r.done && r.done.item && r.done.item.plain) || (r.final && r.final.plain);
+    if (plain) body.append(el('div', null, plain, 'font-size:13.5px;line-height:1.5;color:#2B2F2C;background:#F4F3EF;border-radius:10px;padding:10px 12px'));
   }
   if (r.facts) {
     const g = el('div', 'facts');

@@ -14,13 +14,15 @@ from dataclasses import asdict
 from functools import lru_cache
 from itertools import cycle
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 
 from . import config, report
 from .events import Bus
-from .arena import FINAL, contenders, final_opinion, run_safely
+from .arena import FINAL, coderabbit_observed, contenders, final_opinion, run_safely
+from .github import _ts, parse_pr_url
 from .escalate import system_two
 from .judge import build_state, fact_values, facts, is_trusted
 from .pipeline import SlopGate, summary
@@ -138,6 +140,15 @@ def replay():
     return item
 
 
+@app.get("/api/coderabbit")
+def coderabbit(url: str):
+    """What CodeRabbit has posted on a PR so far: the arena re-checks until its review lands."""
+    owner, repo, number = parse_pr_url(url)
+    raw = gate.github._get(f"/repos/{owner}/{repo}/pulls/{number}")
+    pr = SimpleNamespace(owner=owner, repo=repo, number=number, created_at=_ts(raw["created_at"]))
+    return asdict(run_safely(coderabbit_observed(gate.github), pr, ""))
+
+
 @lru_cache(maxsize=1)
 def _field():
     return contenders(settings, gate.github)  # built once: anti-slop starts its proxy here
@@ -156,7 +167,8 @@ def arena_stream(url: str):
             yield _sse("fail", {"error": str(e)[:300]})
             return
         yield _sse("pr", {"url": pr.url, "title": pr.title, "repo": f"{pr.owner}/{pr.repo}",
-                          "number": pr.number, "author": pr.author, "facts": facts(pr), "info": fact_values(pr)})
+                          "number": pr.number, "author": pr.author, "facts": facts(pr), "info": fact_values(pr),
+                          "created_at": pr.created_at.isoformat()})
         state, field = build_state(pr), _field()
         names = [c.label for c in field]
         final = "SlopGate · OpenJev" in names and "anti-slop (34 rules)" in names

@@ -49,6 +49,7 @@ def comment(t: Triage, linked_issue: int | None = None) -> str:
     parts = [
         f"**SlopGate: `{title}`**{kind} · {why}",
         "",
+        *([t.plain, ""] if t.plain else []),
         "| Signal | Probability |",
         "|---|---|",
         *rows,
