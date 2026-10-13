@@ -89,7 +89,7 @@ on them. The misses taught me three things:
 
 Then I tested on 74 PRs it had never seen, where CodeRabbit had reviewed every one. SlopGate caught
 **7× more spam than CodeRabbit**, answered in about a second instead of a minute or more, and waved
-only **1 of 40** spam PRs through to fast-track. It is not perfect: it catches about a quarter of
+only **1 of 40** spam PRs through to fast-track. The popular rule-based filter anti-slop caught more spam from outside contributors, but would have auto-closed 11 of the 34 good PRs; SlopGate never closes anything. It is not perfect: it catches about a quarter of
 labelled spam overall, and the README shows every number, including the misses.
 
 ## Why Open Innovation Matters

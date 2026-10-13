@@ -61,13 +61,23 @@ repo's owners, members, collaborators or past contributors of spam. Their PRs st
 check, including prompt injection and risky files. Set `SLOPGATE_JUDGE_ALL_AUTHORS=1` to judge
 everyone (CodeRabbit's `include_all_authors`).
 
-## The arena
+## The dashboard
 
-`slopgate serve` also runs the arena: paste any PR and every judge answers side by side, live. Here,
-on a PR that sneaks `curl | bash` into CI and tells AI reviewers to approve it, SlopGate flags the
-prompt injection and the risky file; anti-slop waves it through because the repo owner opened it.
+`slopgate serve` runs the webhook and a dashboard with four pages. Every number on them comes from the
+live server or from [`eval/results`](eval/results); nothing is mocked.
 
-![Every judge on one pull request](docs/arena.png)
+- **Live gate**: every PR the webhook triages, as it arrives, with session stats. *Simulate PR* replays a
+  real demo PR through the gate without labelling anything.
+- **Arena**: one PR, every judge, racing live, including OpenJev's probability for every question and
+  the rule that set the verdict. Paste any PR URL into the search box to judge it.
+- **Scoreboard**: the evaluation, held-out and main sets, with confusion matrices, calibration and the
+  P(spam) distribution.
+- **Threats, cost & stack**: prompt injection, risky CI changes and swarms on real PRs, latency, the
+  System One / System Two split, and the open models behind it.
+
+![The live gate](docs/dashboard.png)
+
+![The arena: every judge on a PR that sneaks curl | bash into CI](docs/arena.png)
 
 ## How it works
 
@@ -99,6 +109,7 @@ never seen.
 | SlopGate · Clef-flash | System One | 34/34 | 30% | 100% | 18% | 0% | 1.2 s | 136 ms | 2302 |
 | DiffusionGemma 26B as chat | Chat LLM | 34/34 | 36% | 100% | 27% | 0% | 1.2 s | 343 ms | 1571 |
 | CodeRabbit | Observed | 1/34 | 100% | 100% | - | - | 6.7 min | - | - |
+| anti-slop (34 rules) | Rules | 29/34 | 71% | 95% | 29% | 100% | 3.9 s | - | - |
 
 **Everyone: 101 real pull requests from 29 repositories**, 60 that maintainers labelled `spam` and 41 merged PRs from the same repositories.
 
@@ -108,6 +119,7 @@ never seen.
 | SlopGate · Clef-flash | System One | 101/101 | 17% | 100% | 15% | 0% | 1.1 s | 127 ms | 2435 |
 | DiffusionGemma 26B as chat | Chat LLM | 98/101 | 22% | 93% | 29% | 2% | 1.2 s | 342 ms | 1683 |
 | CodeRabbit | Observed | 2/101 | 100% | 100% | - | 0% | 3.7 min | - | - |
+| anti-slop (34 rules) | Rules | 96/101 | 38% | 84% | 62% | 10% | 164 ms | - | - |
 
 How SlopGate (OpenJev) got here, on the same 101 PRs:
 
@@ -142,6 +154,7 @@ How SlopGate (OpenJev) got here, on the same 101 PRs:
 | SlopGate · Clef-flash | System One | 25/25 | 17% | 80% | 17% | 50% | 897 ms | 107 ms | 2178 |
 | DiffusionGemma 26B as chat | Chat LLM | 24/25 | 18% | 100% | 5% | 0% | 1.1 s | 366 ms | 1370 |
 | CodeRabbit | Observed | 17/25 | 7% | 100% | - | 0% | 2.1 min | - | - |
+| anti-slop (34 rules) | Rules | 25/25 | 74% | 94% | 26% | 50% | 4.2 s | - | - |
 
 **Everyone: 74 real pull requests from 23 repositories**, 40 that maintainers labelled `spam` and 34 merged PRs from the same repositories.
 
@@ -151,6 +164,7 @@ How SlopGate (OpenJev) got here, on the same 101 PRs:
 | SlopGate · Clef-flash | System One | 74/74 | 10% | 80% | 30% | 3% | 899 ms | 134 ms | 2496 |
 | DiffusionGemma 26B as chat | Chat LLM | 73/74 | 26% | 100% | 23% | 0% | 1.2 s | 387 ms | 1740 |
 | CodeRabbit | Observed | 58/74 | 3% | 100% | - | 0% | 75.5 s | - | - |
+| anti-slop (34 rules) | Rules | 74/74 | 48% | 63% | 52% | 32% | 3.7 s | - | - |
 
 On PRs it had never seen, SlopGate (OpenJev) caught **7× more spam than CodeRabbit** (22% vs 3%;
 39% vs 7% among outside contributors), answered in about a second instead of a minute or more, and
@@ -159,6 +173,12 @@ little more spam with no false alarms, but fast-tracked **23%** of the spam, the
 must not make. SlopGate's one false alarm,
 [PYSCHECARE#445](https://github.com/Shaurya1907/PYSCHECARE-main/pull/445), is a 3-line "code quality"
 change whose entire description was written by CodeRabbit; it was merged.
+
+**anti-slop makes the opposite trade.** Its 34 rules catch the most spam from outside contributors
+(71–74%), but they would have closed 11 of the 34 good, merged PRs in the held-out set (32%), and
+10% on the main set, because anti-slop closes a PR once enough rules fail. SlopGate catches less,
+raises almost no false alarms, and never closes anything. A maintainer who wants both could run
+anti-slop's rules as one more input to SlopGate's read rather than as an auto-closer.
 
 ### How the test works
 

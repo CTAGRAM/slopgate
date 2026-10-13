@@ -1,72 +1,144 @@
 {
-  "n": 34,
-  "spam": 33,
-  "population": "outside contributors",
-  "contenders": [
-    {
-      "name": "SlopGate \u00b7 OpenJev",
-      "kind": "System One",
-      "judged": 34,
-      "total": 34,
-      "precision": 1.0,
-      "recall": 0.5151515151515151,
-      "fpr": 0.0,
-      "waved": 0.030303030303030304,
-      "median": 1.8333973539847648,
-      "median_model": 0.23779999999999998,
-      "tokens": 1816.8529411764705
-    },
-    {
-      "name": "SlopGate \u00b7 Clef-flash",
-      "kind": "System One",
-      "judged": 34,
-      "total": 34,
-      "precision": 1.0,
-      "recall": 0.30303030303030304,
-      "fpr": 0.0,
-      "waved": 0.18181818181818182,
-      "median": 1.2144327294809045,
-      "median_model": 0.13635,
-      "tokens": 2301.676470588235
-    },
-    {
-      "name": "DiffusionGemma 26B as chat",
-      "kind": "Chat LLM",
-      "judged": 34,
-      "total": 34,
-      "precision": 1.0,
-      "recall": 0.36363636363636365,
-      "fpr": 0.0,
-      "waved": 0.2727272727272727,
-      "median": 1.2368877709959634,
-      "median_model": 0.3427,
-      "tokens": 1571.0588235294117
-    },
-    {
-      "name": "CodeRabbit",
-      "kind": "Observed",
-      "judged": 1,
-      "total": 34,
-      "precision": 1.0,
-      "recall": 1.0,
-      "fpr": null,
-      "waved": null,
-      "median": 402.0,
-      "median_model": null,
-      "tokens": null
-    },
-    {
-      "name": "anti-slop (34 rules)",
-      "kind": "Rules",
-      "judged": 29,
-      "total": 34,
-      "precision": 0.9523809523809523,
-      "recall": 0.7142857142857143,
-      "fpr": 1.0,
-      "waved": 0.2857142857142857,
-      "median": 3.886918040981982,
-      "median_model": null,
-      "tokens": null
-    }
-  ]
+  "outside": {
+    "n": 34,
+    "spam": 33,
+    "contenders": [
+      {
+        "name": "SlopGate \u00b7 OpenJev",
+        "kind": "System One",
+        "judged": 34,
+        "total": 34,
+        "precision": 1.0,
+        "recall": 0.5151515151515151,
+        "fpr": 0.0,
+        "waved": 0.030303030303030304,
+        "median": 1.8333973539847648,
+        "median_model": 0.23779999999999998,
+        "tokens": 1816.8529411764705
+      },
+      {
+        "name": "SlopGate \u00b7 Clef-flash",
+        "kind": "System One",
+        "judged": 34,
+        "total": 34,
+        "precision": 1.0,
+        "recall": 0.30303030303030304,
+        "fpr": 0.0,
+        "waved": 0.18181818181818182,
+        "median": 1.2144327294809045,
+        "median_model": 0.13635,
+        "tokens": 2301.676470588235
+      },
+      {
+        "name": "DiffusionGemma 26B as chat",
+        "kind": "Chat LLM",
+        "judged": 34,
+        "total": 34,
+        "precision": 1.0,
+        "recall": 0.36363636363636365,
+        "fpr": 0.0,
+        "waved": 0.2727272727272727,
+        "median": 1.2368877709959634,
+        "median_model": 0.3427,
+        "tokens": 1571.0588235294117
+      },
+      {
+        "name": "CodeRabbit",
+        "kind": "Observed",
+        "judged": 1,
+        "total": 34,
+        "precision": 1.0,
+        "recall": 1.0,
+        "fpr": null,
+        "waved": null,
+        "median": 402.0,
+        "median_model": null,
+        "tokens": null
+      },
+      {
+        "name": "anti-slop (34 rules)",
+        "kind": "Rules",
+        "judged": 29,
+        "total": 34,
+        "precision": 0.9523809523809523,
+        "recall": 0.7142857142857143,
+        "fpr": 1.0,
+        "waved": 0.2857142857142857,
+        "median": 3.886918040981982,
+        "median_model": null,
+        "tokens": null
+      }
+    ]
+  },
+  "everyone": {
+    "n": 101,
+    "spam": 60,
+    "contenders": [
+      {
+        "name": "SlopGate \u00b7 OpenJev",
+        "kind": "System One",
+        "judged": 101,
+        "total": 101,
+        "precision": 1.0,
+        "recall": 0.2833333333333333,
+        "fpr": 0.0,
+        "waved": 0.03333333333333333,
+        "median": 1.1654098750150297,
+        "median_model": 0.2145,
+        "tokens": 1937.0594059405942
+      },
+      {
+        "name": "SlopGate \u00b7 Clef-flash",
+        "kind": "System One",
+        "judged": 101,
+        "total": 101,
+        "precision": 1.0,
+        "recall": 0.16666666666666666,
+        "fpr": 0.0,
+        "waved": 0.15,
+        "median": 1.0726622910005972,
+        "median_model": 0.1274,
+        "tokens": 2435.3168316831684
+      },
+      {
+        "name": "DiffusionGemma 26B as chat",
+        "kind": "Chat LLM",
+        "judged": 98,
+        "total": 101,
+        "precision": 0.9285714285714286,
+        "recall": 0.22413793103448276,
+        "fpr": 0.025,
+        "waved": 0.29310344827586204,
+        "median": 1.2399681039969437,
+        "median_model": 0.34199999999999997,
+        "tokens": 1682.5714285714287
+      },
+      {
+        "name": "CodeRabbit",
+        "kind": "Observed",
+        "judged": 2,
+        "total": 101,
+        "precision": 1.0,
+        "recall": 1.0,
+        "fpr": 0.0,
+        "waved": null,
+        "median": 223.5,
+        "median_model": null,
+        "tokens": null
+      },
+      {
+        "name": "anti-slop (34 rules)",
+        "kind": "Rules",
+        "judged": 96,
+        "total": 101,
+        "precision": 0.84,
+        "recall": 0.38181818181818183,
+        "fpr": 0.0975609756097561,
+        "waved": 0.6181818181818182,
+        "median": 0.16418029098713305,
+        "median_model": null,
+        "tokens": null
+      }
+    ]
+  }
 }
