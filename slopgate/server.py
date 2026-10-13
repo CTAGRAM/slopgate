@@ -208,6 +208,9 @@ async def webhook(
     payload = json.loads(body)
     if payload.get("action") not in TRIGGERS:
         return {"ignored": payload.get("action")}
+    if payload.get("action") == "edited" and payload.get("sender", {}).get("type") == "Bot":
+        # review bots such as CodeRabbit edit their summary into the description; that is not a new PR
+        return {"ignored": "edited by a bot"}
     url = payload["pull_request"]["html_url"]
     emit = BUS.emitter(url, "webhook")
     emit("received", action=payload.get("action"), title=payload["pull_request"].get("title"),
