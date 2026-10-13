@@ -29,57 +29,80 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
 @keyframes gfShine{from{transform:translateX(-120%) skewX(-18deg)}to{transform:translateX(220%) skewX(-18deg)}}
 @keyframes gfArrive{0%{background:rgba(156,211,174,.45)}100%{background:transparent}}
 @keyframes gfBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+[data-sg=nav]{transition:width .22s ease,min-width .22s ease,transform .25s ease}
+@media (min-width:761px){
+  [data-sg=nav][data-min="1"]{width:68px!important;min-width:68px!important}
+  [data-sg=nav][data-min="1"] [data-c=lbl]{display:none!important}
+  [data-sg=nav][data-min="1"] [data-c=item]{justify-content:center!important;padding:9px 0!important}
+  [data-sg=nav][data-min="1"] [data-c=brand]{justify-content:center;padding:0!important}
+  [data-sg=nav][data-min="1"] [data-c=grp]{height:1px;padding:0!important;margin:8px 12px;font-size:0!important;overflow:hidden;background:rgba(255,255,255,.1)}
+  [data-sg=nav][data-min="1"] [data-c=user]{justify-content:center;padding:14px 0!important}
+  [data-sg=scrim]{display:none}
+}
+@media (max-width:760px){
+  [data-sg=nav]{position:fixed!important;left:0;top:0;bottom:0;z-index:80;width:264px!important;min-width:264px!important;transform:translateX(-105%)}
+  [data-sg=nav][data-open="1"]{transform:none;box-shadow:0 0 60px rgba(0,0,0,.45)}
+  [data-sg=header]{padding:0 12px!important;gap:8px!important}
+  [data-sg=search]{min-width:0!important}
+  [data-sg=hide-sm]{display:none!important}
+  [data-sg=icon-sm]{padding:0 11px!important}
+  [data-sg=main]{padding:18px 14px 40px!important}
+  [data-sg=feedrow]{min-width:620px}
+  [data-sg=finish]{min-width:1040px!important}
+}
 </style>
 </helmet>
 <div style="display:flex;height:100vh;width:100%;overflow:hidden;font-variant-numeric:tabular-nums">
 
-<nav style="width:232px;min-width:232px;flex-shrink:0;background:linear-gradient(180deg,#121C17,#0F1A15);color:#DDE3DD;display:flex;flex-direction:column;height:100%;overflow:hidden;box-shadow:inset -1px 0 0 rgba(255,255,255,.06)">
-  <div style="height:60px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+<nav data-sg="nav" data-min="{{ navMinAttr }}" data-open="{{ navOpenAttr }}" style="width:232px;min-width:232px;flex-shrink:0;background:linear-gradient(180deg,#121C17,#0F1A15);color:#DDE3DD;display:flex;flex-direction:column;height:100%;overflow:hidden;box-shadow:inset -1px 0 0 rgba(255,255,255,.06)">
+  <div data-c="brand" style="height:60px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.07)">
     <div style="width:30px;height:30px;border-radius:9px;background:linear-gradient(160deg,#3E8A66,#245640);display:grid;place-items:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
-    <div style="min-width:0"><div style="font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;line-height:1.1">SlopGate</div><div style="font-size:10.5px;color:#7F8A82;white-space:nowrap">Clean PRs. Calmer maintainers.</div></div>
+    <div data-c="lbl" style="min-width:0"><div style="font-weight:700;font-size:16px;letter-spacing:-0.01em;color:#fff;line-height:1.1">SlopGate</div><div style="font-size:10.5px;color:#7F8A82;white-space:nowrap">Clean PRs. Calmer maintainers.</div></div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:12px 10px 16px;display:flex;flex-direction:column;gap:8px">
     <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="3">
       <div>
-        <div style="padding:6px 10px;color:#7F8A82;font-weight:500;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">{{ g.label }}</div>
+        <div data-c="grp" style="padding:6px 10px;color:#7F8A82;font-weight:500;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">{{ g.label }}</div>
         <div style="display:flex;flex-direction:column;gap:1px;margin-top:2px">
           <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
-            <button data-page="{{ it.id }}" onClick="{{ goPage }}" style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px 7px 16px;border:0;border-radius:7px;cursor:pointer;text-align:left;font-size:13px;transition:background .12s;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }}" style-hover="background:rgba(255,255,255,.06);color:#fff">
+            <button data-page="{{ it.id }}" data-c="item" title="{{ it.label }}" onClick="{{ goPage }}" style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px 7px 16px;border:0;border-radius:7px;cursor:pointer;text-align:left;font-size:13px;transition:background .12s;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }}" style-hover="background:rgba(255,255,255,.06);color:#fff">
               <span style="position:absolute;left:4px;top:9px;bottom:9px;width:3px;border-radius:2px;background:{{ it.bar }}"></span>
-              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.label }}</span>
-              <sc-if value="{{ it.count }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#0F1A15;background:#9CD3AE;border-radius:10px;padding:0 6px;line-height:16px">{{ it.count }}</span></sc-if>
+              <span style="display:flex;align-items:center;gap:10px;min-width:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="{{ it.icon }}"></path></svg><span data-c="lbl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ it.label }}</span></span>
+              <sc-if value="{{ it.count }}" hint-placeholder-val="{{ false }}"><span data-c="lbl" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#0F1A15;background:#9CD3AE;border-radius:10px;padding:0 6px;line-height:16px">{{ it.count }}</span></sc-if>
             </button>
           </sc-for>
         </div>
       </div>
     </sc-for>
-    <div style="margin-top:auto;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:6px">
+    <div data-c="lbl" style="margin-top:auto;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);display:flex;flex-direction:column;gap:6px">
       <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9CD3AE;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:#9CD3AE;animation:gfPulse 2s infinite"></span>{{ hookLabel }}</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7F8A82;line-height:1.6"><div>{{ hostLine }}</div><div>{{ s1Line }}</div><div>{{ s2Line }}</div></div>
     </div>
   </div>
-  <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px">
+  <div data-c="user" style="padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px">
     <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3E8A66,#9CD3AE);display:grid;place-items:center;font-size:11px;font-weight:700;color:#0F1A15">CT</div>
-    <div style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">CTAGRAM</div><div style="font-size:11px;color:#7F8A82;white-space:nowrap">Maintainer · 2 repos</div></div>
+    <div data-c="lbl" style="min-width:0"><div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap">CTAGRAM</div><div style="font-size:11px;color:#7F8A82;white-space:nowrap">Maintainer · 2 repos</div></div>
   </div>
 </nav>
+<sc-if value="{{ navOpen }}" hint-placeholder-val="{{ false }}"><div data-sg="scrim" onClick="{{ closeNav }}" style="position:fixed;inset:0;z-index:75;background:rgba(15,26,21,.45);backdrop-filter:blur(3px);animation:gfFade .2s ease"></div></sc-if>
 
 <div style="flex:1;min-width:0;display:flex;flex-direction:column;height:100%">
-  <header style="height:60px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(244,243,239,.6);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.7);box-shadow:0 1px 0 rgba(20,22,26,.05)">
-    <div style="flex:1;min-width:160px;max-width:560px;overflow:hidden;display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border:1px solid rgba(255,255,255,.9);border-radius:10px;background:rgba(255,255,255,.7);color:#8A8E95;font-size:13px">
+  <header data-sg="header" style="height:60px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(244,243,239,.6);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.7);box-shadow:0 1px 0 rgba(20,22,26,.05)">
+    <button onClick="{{ toggleNav }}" title="{{ navTip }}" aria-label="{{ navTip }}" style="width:36px;height:36px;flex-shrink:0;border:1px solid rgba(255,255,255,.9);border-radius:9px;background:rgba(255,255,255,.65);display:grid;place-items:center;cursor:pointer;color:#4A4E55;padding:0" style-hover="background:#fff;color:#14161A"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9 4v16"></path></svg></button>
+    <div data-sg="search" style="flex:1;min-width:160px;max-width:560px;overflow:hidden;display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border:1px solid rgba(255,255,255,.9);border-radius:10px;background:rgba(255,255,255,.7);color:#8A8E95;font-size:13px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
       <input placeholder="Paste a GitHub PR URL and press Enter to judge it" onKeyDown="{{ searchKey }}" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;color:#14161A">
-      <span style="font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid #E5E3DD;border-radius:5px;padding:1px 5px">↵</span>
+      <span data-sg="hide-sm" style="font-family:'JetBrains Mono',monospace;font-size:10px;border:1px solid #E5E3DD;border-radius:5px;padding:1px 5px">↵</span>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;justify-content:flex-end">
-      <div style="display:flex;align-items:center;gap:7px;height:34px;white-space:nowrap;padding:0 11px;border:1px solid rgba(255,255,255,.9);border-radius:8px;font-size:13px;font-weight:600;background:rgba(255,255,255,.65);min-width:0;flex-shrink:1;overflow:hidden"><span style="width:8px;height:8px;border-radius:50%;background:#2F6B4F;flex-shrink:0"></span><span style="overflow:hidden;text-overflow:ellipsis">CTAGRAM/slopgate-demo</span><span style="color:#8A8E95;font-size:9px">▼</span></div>
-      <a href="https://github.com/CTAGRAM/slopgate#use-it" target="_blank" style="height:34px;white-space:nowrap;padding:0 14px;border-radius:8px;background:#14161A;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;text-decoration:none;transition:background .2s,box-shadow .2s,transform .2s" style-hover="background:#2A2D33;color:#fff;text-decoration:none;transform:translateY(-1px);box-shadow:0 6px 16px rgba(20,22,26,.25)"><svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>Add to GitHub</a>
-      <button onClick="{{ simulate }}" style="height:34px;white-space:nowrap;padding:0 14px;border:0;border-radius:8px;background:#2F6B4F;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#265A42"><span style="font-size:16px;line-height:1">+</span>Simulate PR</button>
+      <div data-sg="hide-sm" style="display:flex;align-items:center;gap:7px;height:34px;white-space:nowrap;padding:0 11px;border:1px solid rgba(255,255,255,.9);border-radius:8px;font-size:13px;font-weight:600;background:rgba(255,255,255,.65);min-width:0;flex-shrink:1;overflow:hidden"><span style="width:8px;height:8px;border-radius:50%;background:#2F6B4F;flex-shrink:0"></span><span style="overflow:hidden;text-overflow:ellipsis">CTAGRAM/slopgate-demo</span><span style="color:#8A8E95;font-size:9px">▼</span></div>
+      <a href="https://github.com/CTAGRAM/slopgate#use-it" target="_blank" data-sg="icon-sm" title="Add to GitHub" style="height:34px;white-space:nowrap;padding:0 14px;border-radius:8px;background:#14161A;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;text-decoration:none;transition:background .2s,box-shadow .2s,transform .2s" style-hover="background:#2A2D33;color:#fff;text-decoration:none;transform:translateY(-1px);box-shadow:0 6px 16px rgba(20,22,26,.25)"><svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg><span data-sg="hide-sm">Add to GitHub</span></a>
+      <button onClick="{{ simulate }}" data-sg="icon-sm" title="Simulate PR" style="height:34px;white-space:nowrap;padding:0 14px;border:0;border-radius:8px;background:#2F6B4F;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px" style-hover="background:#265A42"><span style="font-size:16px;line-height:1">+</span><span data-sg="hide-sm">Simulate PR</span></button>
     </div>
   </header>
 
   <sc-if value="{{ anyMax }}" hint-placeholder-val="{{ false }}"><div onClick="{{ closeMax }}" style="position:fixed;inset:0;z-index:55;background:rgba(15,26,21,.42);backdrop-filter:blur(6px);animation:gfFade .25s ease"></div></sc-if>
-  <main style="flex:1;overflow-y:auto;overflow-x:hidden;padding:28px 32px 48px;min-width:0;background:radial-gradient(ellipse 50% 35% at 12% 8%,rgba(156,211,174,.45),transparent 60%),radial-gradient(ellipse 45% 35% at 92% 30%,rgba(110,120,184,.2),transparent 60%),radial-gradient(ellipse 50% 40% at 60% 100%,rgba(196,168,107,.18),transparent 60%),#F4F3EF;background-attachment:local">
+  <main data-sg="main" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:28px 32px 48px;min-width:0;background:radial-gradient(ellipse 50% 35% at 12% 8%,rgba(156,211,174,.45),transparent 60%),radial-gradient(ellipse 45% 35% at 92% 30%,rgba(110,120,184,.2),transparent 60%),radial-gradient(ellipse 50% 40% at 60% 100%,rgba(196,168,107,.18),transparent 60%),#F4F3EF;background-attachment:local">
 
   <!-- ================= 1 · LIVE GATE ================= -->
   <sc-if value="{{ isGate }}" hint-placeholder-val="{{ true }}">
@@ -105,7 +128,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
 
     <section style="background:linear-gradient(160deg,rgba(15,26,21,.97),rgba(15,26,21,.9));color:#F2F4EF;border:1px solid rgba(255,255,255,.08);box-shadow:0 30px 60px -24px rgba(15,26,21,.55),inset 0 1px 0 rgba(255,255,255,.08);border-radius:16px;overflow:hidden;position:relative;animation:gfUp .55s ease .05s backwards">
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 15% 20%,rgba(62,138,102,.22),transparent 60%);pointer-events:none"></div>
-      <div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:32px;padding:28px 32px 24px">
+      <div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:32px;padding:28px 32px 24px">
         <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#9CD3AE;border:1px solid rgba(156,211,174,.35);border-radius:5px;padding:2px 7px;white-space:nowrap">The problem</span><span style="font-size:11px;color:#9AA59E">Hacktoberfest 2026 FAQ</span></div>
           <div style="font-size:21px;font-weight:700;line-height:1.3;letter-spacing:-0.015em;text-wrap:pretty">“It’s easier than ever to submit low-effort spam PRs to projects, so we’re listening to maintainer feedback and no longer actively incentivizing PRs.”</div>
@@ -197,11 +220,11 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
     <section style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;animation:gfUp .55s ease .12s backwards">
       <div style="flex:2 1 640px;overflow-x:auto;overflow-y:{{ mx.feed.o }};background:{{ mx.feed.bg }};backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.85);box-shadow:{{ mx.feed.sh }};border-radius:14px;padding:24px;min-width:0;position:{{ mx.feed.p }};inset:{{ mx.feed.i }};z-index:{{ mx.feed.z }};transition:box-shadow .3s ease">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px"><div><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em">Gate feed</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">Webhook-triaged PRs, newest first · last 30 kept</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8A5D0B;background:#FBF1DC;border-radius:5px;padding:3px 7px">{{ feedBadge }}</span><button data-id="feed" onClick="{{ toggleMax }}" title="{{ mx.feed.tip }}" style="width:30px;height:30px;border-radius:8px;border:1px solid #E5E3DD;background:rgba(255,255,255,.8);display:grid;place-items:center;cursor:pointer;color:#4A4E55;transition:all .2s ease" style-hover="background:#fff;color:#2F6B4F;border-color:rgba(62,138,102,.5);box-shadow:0 0 0 3px rgba(156,211,174,.3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ mx.feed.icon }}"></path></svg></button></div></div>
-        <div style="display:grid;grid-template-columns:128px minmax(0,1fr) 150px 64px 92px;gap:0 14px;font-weight:600;font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:#8A8E95;padding:0 0 6px;border-bottom:1px solid #EFEDE9"><span>Verdict</span><span>Pull request</span><span>Flags</span><span style="text-align:right">Time</span><span>Confidence</span></div>
+        <div data-sg="feedrow" style="display:grid;grid-template-columns:128px minmax(0,1fr) 150px 64px 92px;gap:0 14px;font-weight:600;font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:#8A8E95;padding:0 0 6px;border-bottom:1px solid #EFEDE9"><span>Verdict</span><span>Pull request</span><span>Flags</span><span style="text-align:right">Time</span><span>Confidence</span></div>
         <sc-if value="{{ feedEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 0;color:#6A6E75;font-size:13px">No PRs yet this session. Open one on <a href="https://github.com/CTAGRAM/slopgate-demo/pulls" target="_blank">slopgate-demo</a>, or press Simulate PR to replay a demo PR.</div></sc-if>
         <div style="display:flex;flex-direction:column">
           <sc-for list="{{ feed }}" as="f" hint-placeholder-count="8">
-            <div style="display:grid;grid-template-columns:128px minmax(0,1fr) 150px 64px 92px;gap:0 14px;align-items:center;padding:11px 10px;margin:0 -10px;border-bottom:1px solid #EFEDE9;border-radius:10px;cursor:pointer;transition:background .35s ease,box-shadow .35s ease,transform .35s cubic-bezier(.2,.8,.2,1);animation:{{ f.anim }}" data-url="{{ f.url }}" onClick="{{ openUrl }}" style-hover="background:rgba(255,255,255,.95);box-shadow:0 8px 22px -12px rgba(20,22,26,.22),0 0 0 1px rgba(47,107,79,.14);transform:translateX(3px)">
+            <div data-sg="feedrow" style="display:grid;grid-template-columns:128px minmax(0,1fr) 150px 64px 92px;gap:0 14px;align-items:center;padding:11px 10px;margin:0 -10px;border-bottom:1px solid #EFEDE9;border-radius:10px;cursor:pointer;transition:background .35s ease,box-shadow .35s ease,transform .35s cubic-bezier(.2,.8,.2,1);animation:{{ f.anim }}" data-url="{{ f.url }}" onClick="{{ openUrl }}" style-hover="background:rgba(255,255,255,.95);box-shadow:0 8px 22px -12px rgba(20,22,26,.22),0 0 0 1px rgba(47,107,79,.14);transform:translateX(3px)">
               <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;width:max-content;white-space:nowrap;background:{{ f.vbg }};color:{{ f.vfg }}">{{ f.vlabel }}</span>
               <div style="min-width:0"><div style="font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.title }}</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6A6E75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.repo }} · @{{ f.author }} · {{ f.ago }}</div></div>
               <div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -295,7 +318,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
     </div>
 
     <div style="background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66));backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(20,22,26,.04),0 8px 24px -12px rgba(20,22,26,.12),inset 0 1px 0 rgba(255,255,255,.95);border-radius:14px;padding:18px 24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
-      <div style="flex:1;min-width:260px"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6A6E75">{{ pr.repo }} #{{ pr.num }} · @{{ pr.author }}</div><div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;margin-top:2px">{{ pr.title }}</div></div>
+      <div style="flex:1;min-width:min(100%,260px)"><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#6A6E75">{{ pr.repo }} #{{ pr.num }} · @{{ pr.author }}</div><div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;margin-top:2px">{{ pr.title }}</div></div>
       <div style="display:flex;gap:18px;font-size:12px;color:#6A6E75;flex-wrap:wrap">
         <span>diff <strong style="color:#14161A;font-family:'JetBrains Mono',monospace">{{ pr.diff }}</strong></span>
         <span>truth <strong style="color:#14161A">{{ pr.truth }}</strong></span>
@@ -310,7 +333,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
         <span style="font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;width:max-content;background:{{ plain.vbg }};color:{{ plain.vfg }}">{{ plain.vlabel }}</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7F8A82">{{ plain.by }}</span>
       </div>
-      <div style="flex:1;min-width:280px;font-size:17px;line-height:1.55;font-weight:500;text-wrap:pretty">{{ plain.text }}</div>
+      <div style="flex:1;min-width:min(100%,280px);font-size:17px;line-height:1.55;font-weight:500;text-wrap:pretty">{{ plain.text }}</div>
     </div>
     </sc-if>
 
@@ -341,7 +364,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
 
     <section style="background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66));backdrop-filter:blur(14px) saturate(1.3);border:1px solid rgba(255,255,255,.85);box-shadow:0 1px 2px rgba(20,22,26,.04),0 8px 24px -12px rgba(20,22,26,.12),inset 0 1px 0 rgba(255,255,255,.95);border-radius:14px;padding:24px;min-width:0;overflow-x:auto">
       <div style="margin-bottom:10px"><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em">Finish order</h2><div style="font-size:12px;color:#6A6E75;margin-top:2px">Ranked by wall-clock time to a verdict</div></div>
-      <div style="min-width:820px">
+      <div data-sg="finish" style="min-width:820px">
         <div style="display:grid;grid-template-columns:40px 190px 90px 128px 70px 80px minmax(0,1fr);gap:0 14px;font-weight:600;font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:#8A8E95;padding:0 0 6px;border-bottom:1px solid #EFEDE9"><span>#</span><span>Judge</span><span style="text-align:right">Time</span><span>Verdict</span><span style="text-align:right">P(spam)</span><span style="text-align:right">Tokens</span><span>Reason</span></div>
         <sc-for list="{{ order }}" as="o" hint-placeholder-count="5">
           <div style="display:grid;grid-template-columns:40px 190px 90px 128px 70px 80px minmax(0,1fr);gap:0 14px;align-items:center;padding:11px 0;border-bottom:1px solid #EFEDE9;font-size:13px;opacity:{{ o.op }}">
@@ -490,7 +513,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #2F6B4F;outline-offset:2p
       </div>
     </section>
 
-    <section style="background:linear-gradient(160deg,rgba(15,26,21,.97),rgba(15,26,21,.9));color:#F2F4EF;border-radius:14px;padding:24px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;box-shadow:0 30px 60px -24px rgba(15,26,21,.55)">
+    <section style="background:linear-gradient(160deg,rgba(15,26,21,.97),rgba(15,26,21,.9));color:#F2F4EF;border-radius:14px;padding:24px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:24px;box-shadow:0 30px 60px -24px rgba(15,26,21,.55)">
       <div style="display:flex;flex-direction:column;gap:8px"><div style="font-weight:600;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#9CD3AE">{{ dsKicker }}</div><div style="font-size:22px;font-weight:700;letter-spacing:-0.01em">{{ dsTitle }}</div><div style="font-size:13px;color:#C9D1CB">{{ dsSub }}</div></div>
       <div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:12.5px;color:#C9D1CB;align-content:start">
         <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F8A82;padding-top:2px">SPAM</span><span>{{ dsSpam }}</span>
@@ -721,7 +744,9 @@ class Component extends DCLogic {
   state = (() => {
     let page = 'gate';
     try { page = localStorage.getItem('slopgate.page') || 'gate'; } catch(e) {}
-    return {page, feed:[], status:null, dash:null, sel:'d3', arena:null, liveArena:false, now:Date.now(), cm:'fin', set:'heldout', perfJ:'fin', thr:.8, max:null};
+    let navMin = false;
+    try { navMin = localStorage.getItem('slopgate.navMin') === '1'; } catch(e) {}
+    return {page, navMin, navOpen:false, feed:[], status:null, dash:null, sel:'d3', arena:null, liveArena:false, now:Date.now(), cm:'fin', set:'heldout', perfJ:'fin', thr:.8, max:null};
   })();
 
   componentDidMount() {
@@ -736,7 +761,7 @@ class Component extends DCLogic {
     });
     this.load();
     fetch('/api/dashboard').then(r=>r.json()).then(dash=>this.setState({dash})).catch(()=>{});
-    this.onKey = e => { if (e.key==='Escape' && this.state.max) this.setState({max:null}); };
+    this.onKey = e => { if (e.key!=='Escape') return; if (this.state.max) this.setState({max:null}); if (this.state.navOpen) this.setState({navOpen:false}); };
     window.addEventListener('keydown', this.onKey);
     if (this.state.page === 'arena') this.run(PRESETS.find(p=>p.id===this.state.sel).url);
   }
@@ -776,15 +801,15 @@ class Component extends DCLogic {
     es.addEventListener('done', () => { upd(()=>({running:false})); es.close(); });
     es.onerror = () => { upd(()=>({running:false})); es.close(); };
   }
-  go(page) { if (page === 'sim') { window.location.href = '/sim'; return; } try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page}); if (page === 'arena' && !this.state.arena && !this.state.liveArena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
+  go(page) { if (page === 'sim') { window.location.href = '/sim'; return; } try { localStorage.setItem('slopgate.page', page); } catch(x) {} this.setState({page, navOpen:false}); if (page === 'arena' && !this.state.arena && !this.state.liveArena) this.run(PRESETS.find(p=>p.id===this.state.sel).url); }
 
   renderVals() {
     const s = this.state, now = s.now, D = s.dash, st = s.status || {};
     const ago = ts => { const d = Math.max(0, Math.round(now/1000 - ts)); return d<5 ? 'just now' : d<60 ? d+'s ago' : d<3600 ? Math.round(d/60)+'m ago' : Math.round(d/3600)+'h ago'; };
     const nav = [
-      {label:'Gate',items:[{id:'gate',label:'Live gate',count:s.feed.filter(f=>now/1000-f.at<60).length||null},{id:'sim',label:'3D pipeline'},{id:'arena',label:'Arena'}]},
-      {label:'Proof',items:[{id:'proof',label:'Scoreboard'}]},
-      {label:'System',items:[{id:'ops',label:'Threats, cost & stack'}]}
+      {label:'Gate',items:[{id:'gate',icon:'M3 21h18M5 21V7l7-4 7 4v14M9 21v-8h6v8',label:'Live gate',count:s.feed.filter(f=>now/1000-f.at<60).length||null},{id:'sim',icon:'M12 2l9 5v10l-9 5-9-5V7zM12 22V12M21 7l-9 5-9-5',label:'3D pipeline'},{id:'arena',icon:'M13 2L4 14h7l-1 8 9-12h-7z',label:'Arena'}]},
+      {label:'Proof',items:[{id:'proof',icon:'M4 20V10M10 20V4M16 20v-7M2 20h20',label:'Scoreboard'}]},
+      {label:'System',items:[{id:'ops',icon:'M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM12 8v4M12 16h.01',label:'Threats, cost & stack'}]}
     ].map(g=>({...g,items:g.items.map(it=>{const a=it.id===s.page;return {...it,bg:a?'rgba(255,255,255,.08)':'transparent',color:a?'#fff':'#C9D1CB',weight:a?600:500,bar:a?'#9CD3AE':'transparent'};})}));
     const main = D && D.sets.main, held = D && D.sets.heldout;
     const C = 2*Math.PI*15.9;
@@ -961,7 +986,10 @@ class Component extends DCLogic {
     const hr = new Date().getHours();
     return {
       mx, anyMax:!!s.max, toggleMax:e=>{const id=e.currentTarget.dataset.id;this.setState(x=>({max:x.max===id?null:id}));}, closeMax:()=>this.setState({max:null}),
-      navGroups:nav, goPage:e=>{e.preventDefault&&e.preventDefault();this.go(e.currentTarget.dataset.page);},
+      navGroups:nav, navMinAttr:s.navMin?'1':'0', navOpenAttr:s.navOpen?'1':'0', navOpen:s.navOpen, navTip:'Toggle sidebar',
+      toggleNav:()=>{ if (window.matchMedia('(max-width: 760px)').matches) this.setState(x=>({navOpen:!x.navOpen})); else this.setState(x=>{ const v=!x.navMin; try{localStorage.setItem('slopgate.navMin',v?'1':'0');}catch(e){} return {navMin:v}; }); },
+      closeNav:()=>this.setState({navOpen:false}),
+      goPage:e=>{e.preventDefault&&e.preventDefault();this.go(e.currentTarget.dataset.page);},
       isGate:s.page==='gate',isArena:s.page==='arena',isProof:s.page==='proof',isOps:s.page==='ops',
       hookLabel:st.webhook_verified?'Webhook connected · signed':'Webhook connected', hostLine:deployed?'Droplet · '+st.host:'Running locally', s1Line:st1, s2Line:st2,
       searchKey:e=>{ if (e.key!=='Enter') return; const url=e.target.value.trim(); if (!/github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(url)) return; try{localStorage.setItem('slopgate.page','arena');}catch(x){} this.setState({page:'arena',sel:'custom'}); this.run(url); },
