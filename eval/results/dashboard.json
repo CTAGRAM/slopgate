@@ -1,0 +1,1821 @@
+{
+ "sets": {
+  "main": {
+   "n": 101,
+   "spam": 60,
+   "repos": 29,
+   "contenders": {
+    "SlopGate \u00b7 OpenJev": {
+     "name": "SlopGate \u00b7 OpenJev",
+     "kind": "System One",
+     "judged": 101,
+     "total": 101,
+     "precision": 1.0,
+     "recall": 0.2833333333333333,
+     "fpr": 0.0,
+     "waved": 0.03333333333333333,
+     "median": 1.1654098750150297,
+     "median_model": 0.2145,
+     "tokens": 1937.0594059405942,
+     "auc": 0.8048780487804879,
+     "p95": 2.213486374996137,
+     "false_alarms": "0 / 41",
+     "cm": [
+      [
+       17,
+       39,
+       2,
+       2
+      ],
+      [
+       0,
+       29,
+       1,
+       11
+      ]
+     ]
+    },
+    "SlopGate \u00b7 Clef-flash": {
+     "name": "SlopGate \u00b7 Clef-flash",
+     "kind": "System One",
+     "judged": 101,
+     "total": 101,
+     "precision": 1.0,
+     "recall": 0.16666666666666666,
+     "fpr": 0.0,
+     "waved": 0.15,
+     "median": 1.0726622910005972,
+     "median_model": 0.1274,
+     "tokens": 2435.3168316831684,
+     "auc": 0.7660569105691057,
+     "p95": 2.090007749997312,
+     "false_alarms": "0 / 41",
+     "cm": [
+      [
+       10,
+       36,
+       5,
+       9
+      ],
+      [
+       0,
+       18,
+       0,
+       23
+      ]
+     ]
+    },
+    "DiffusionGemma 26B as chat": {
+     "name": "DiffusionGemma 26B as chat",
+     "kind": "Chat LLM",
+     "judged": 98,
+     "total": 101,
+     "precision": 0.9285714285714286,
+     "recall": 0.22413793103448276,
+     "fpr": 0.025,
+     "waved": 0.29310344827586204,
+     "median": 1.2399681039969437,
+     "median_model": 0.34199999999999997,
+     "tokens": 1682.5714285714287,
+     "auc": 0.7709051724137931,
+     "p95": 1.6985171670094132,
+     "false_alarms": "1 / 40",
+     "cm": [
+      [
+       13,
+       18,
+       10,
+       17
+      ],
+      [
+       1,
+       11,
+       2,
+       26
+      ]
+     ]
+    },
+    "CodeRabbit": {
+     "name": "CodeRabbit",
+     "kind": "Observed",
+     "judged": 2,
+     "total": 101,
+     "precision": 1.0,
+     "recall": 1.0,
+     "fpr": 0.0,
+     "waved": null,
+     "median": 223.5,
+     "median_model": null,
+     "tokens": null,
+     "auc": null,
+     "p95": 45.0,
+     "false_alarms": "0 / 1",
+     "cm": [
+      [
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       1,
+       0,
+       0
+      ]
+     ]
+    },
+    "anti-slop (34 rules)": {
+     "name": "anti-slop (34 rules)",
+     "kind": "Rules",
+     "judged": 96,
+     "total": 101,
+     "precision": 0.84,
+     "recall": 0.38181818181818183,
+     "fpr": 0.0975609756097561,
+     "waved": 0.6181818181818182,
+     "median": 0.16418029098713305,
+     "median_model": null,
+     "tokens": null,
+     "auc": null,
+     "p95": 6.767034083983162,
+     "false_alarms": "4 / 41",
+     "cm": [
+      [
+       21,
+       0,
+       0,
+       34
+      ],
+      [
+       4,
+       0,
+       0,
+       37
+      ]
+     ]
+    }
+   },
+   "openjev": {
+    "verdicts": {
+     "needs_review": 68,
+     "spam": 17,
+     "fast_track": 13,
+     "needs_changes": 3
+    },
+    "hist": [
+     {
+      "spam": 34,
+      "merged": 37
+     },
+     {
+      "spam": 3,
+      "merged": 0
+     },
+     {
+      "spam": 1,
+      "merged": 0
+     },
+     {
+      "spam": 1,
+      "merged": 2
+     },
+     {
+      "spam": 1,
+      "merged": 0
+     },
+     {
+      "spam": 0,
+      "merged": 0
+     },
+     {
+      "spam": 0,
+      "merged": 0
+     },
+     {
+      "spam": 2,
+      "merged": 1
+     },
+     {
+      "spam": 5,
+      "merged": 0
+     },
+     {
+      "spam": 13,
+      "merged": 1
+     }
+    ],
+    "calibration": [
+     {
+      "bin": 0,
+      "predicted": 0.007406678594528509,
+      "observed": 0.4788732394366197,
+      "n": 71
+     },
+     {
+      "bin": 1,
+      "predicted": 0.13761120731545895,
+      "observed": 1.0,
+      "n": 3
+     },
+     {
+      "bin": 2,
+      "predicted": 0.2914652176533835,
+      "observed": 1.0,
+      "n": 1
+     },
+     {
+      "bin": 3,
+      "predicted": 0.3879673448741935,
+      "observed": 0.3333333333333333,
+      "n": 3
+     },
+     {
+      "bin": 4,
+      "predicted": 0.44933329445169956,
+      "observed": 1.0,
+      "n": 1
+     },
+     {
+      "bin": 7,
+      "predicted": 0.7878409124851007,
+      "observed": 0.6666666666666666,
+      "n": 3
+     },
+     {
+      "bin": 8,
+      "predicted": 0.8487085518321122,
+      "observed": 1.0,
+      "n": 5
+     },
+     {
+      "bin": 9,
+      "predicted": 0.9634532026805798,
+      "observed": 0.9285714285714286,
+      "n": 14
+     }
+    ],
+    "ece": 0.3870566389721036,
+    "points": [
+     [
+      0.2914652176533835,
+      "spam"
+     ],
+     [
+      0.9989216199758292,
+      "spam"
+     ],
+     [
+      0.00021791788677895718,
+      "spam"
+     ],
+     [
+      0.009672397526336262,
+      "spam"
+     ],
+     [
+      0.994335558872479,
+      "spam"
+     ],
+     [
+      0.0025673943132003326,
+      "spam"
+     ],
+     [
+      0.7871995589176656,
+      "spam"
+     ],
+     [
+      4.033224569913086e-06,
+      "spam"
+     ],
+     [
+      0.025357627105553122,
+      "spam"
+     ],
+     [
+      0.9960576929507783,
+      "spam"
+     ],
+     [
+      0.008476899966993823,
+      "spam"
+     ],
+     [
+      0.026761934170317525,
+      "spam"
+     ],
+     [
+      0.03970698837099401,
+      "spam"
+     ],
+     [
+      0.903842055417883,
+      "spam"
+     ],
+     [
+      0.9999946461790039,
+      "spam"
+     ],
+     [
+      0.15921900165227376,
+      "spam"
+     ],
+     [
+      0.911128620830709,
+      "spam"
+     ],
+     [
+      0.9822167303067324,
+      "spam"
+     ],
+     [
+      0.0008286423104184313,
+      "spam"
+     ],
+     [
+      0.0012151754511300096,
+      "spam"
+     ],
+     [
+      0.000767315899111149,
+      "spam"
+     ],
+     [
+      0.999956371716246,
+      "spam"
+     ],
+     [
+      0.00044387304452199466,
+      "spam"
+     ],
+     [
+      0.9433030152882752,
+      "spam"
+     ],
+     [
+      0.00010003830840616715,
+      "spam"
+     ],
+     [
+      0.0030643144735015768,
+      "spam"
+     ],
+     [
+      0.839255892044266,
+      "spam"
+     ],
+     [
+      5.99162379854094e-05,
+      "spam"
+     ],
+     [
+      0.00014819326821285763,
+      "spam"
+     ],
+     [
+      0.005950473618457967,
+      "spam"
+     ],
+     [
+      0.7815546336652871,
+      "spam"
+     ],
+     [
+      0.8672955663564529,
+      "spam"
+     ],
+     [
+      0.07005636473075387,
+      "spam"
+     ],
+     [
+      0.011238978441894372,
+      "spam"
+     ],
+     [
+      0.0009672662877866361,
+      "spam"
+     ],
+     [
+      0.8131824800470051,
+      "spam"
+     ],
+     [
+      0.0045941848531060115,
+      "spam"
+     ],
+     [
+      0.0036836316951902857,
+      "spam"
+     ],
+     [
+      0.9693486071661215,
+      "spam"
+     ],
+     [
+      0.9656370021823579,
+      "spam"
+     ],
+     [
+      0.0017415115779722073,
+      "spam"
+     ],
+     [
+      0.8434913191372075,
+      "spam"
+     ],
+     [
+      0.003257474324232815,
+      "spam"
+     ],
+     [
+      0.0010288358492909439,
+      "spam"
+     ],
+     [
+      0.44933329445169956,
+      "spam"
+     ],
+     [
+      0.023342824187530767,
+      "spam"
+     ],
+     [
+      0.0011573053732284678,
+      "spam"
+     ],
+     [
+      0.8803175015756295,
+      "spam"
+     ],
+     [
+      0.37076195635993486,
+      "spam"
+     ],
+     [
+      0.9475549091153623,
+      "spam"
+     ],
+     [
+      0.00043089924531221563,
+      "spam"
+     ],
+     [
+      0.0002786313218767886,
+      "spam"
+     ],
+     [
+      0.9024240008616674,
+      "spam"
+     ],
+     [
+      0.00043830566683661343,
+      "spam"
+     ],
+     [
+      0.001373157685765848,
+      "spam"
+     ],
+     [
+      0.001953803487601518,
+      "spam"
+     ],
+     [
+      0.00035440816443609046,
+      "spam"
+     ],
+     [
+      0.14497889099235292,
+      "spam"
+     ],
+     [
+      0.10863572930175021,
+      "spam"
+     ],
+     [
+      0.07241485643500757,
+      "spam"
+     ],
+     [
+      5.2817508335388905e-05,
+      "merged"
+     ],
+     [
+      2.9193155861334814e-05,
+      "merged"
+     ],
+     [
+      0.033293099752298966,
+      "merged"
+     ],
+     [
+      0.0010267388351013875,
+      "merged"
+     ],
+     [
+      0.0002559028892231189,
+      "merged"
+     ],
+     [
+      1.1188153421364074e-05,
+      "merged"
+     ],
+     [
+      1.0726433251106442e-05,
+      "merged"
+     ],
+     [
+      0.0004700168856705914,
+      "merged"
+     ],
+     [
+      1.3234071299356095e-05,
+      "merged"
+     ],
+     [
+      0.01185947799456434,
+      "merged"
+     ],
+     [
+      0.0007786591744965576,
+      "merged"
+     ],
+     [
+      0.0008194152466026026,
+      "merged"
+     ],
+     [
+      6.504040337823056e-06,
+      "merged"
+     ],
+     [
+      5.9172440906659166e-05,
+      "merged"
+     ],
+     [
+      0.00032163856056869136,
+      "merged"
+     ],
+     [
+      3.513840833201525e-06,
+      "merged"
+     ],
+     [
+      0.0009753589477813738,
+      "merged"
+     ],
+     [
+      1.1769332275354602e-05,
+      "merged"
+     ],
+     [
+      3.904165993994493e-05,
+      "merged"
+     ],
+     [
+      3.595328916687104e-05,
+      "merged"
+     ],
+     [
+      0.3986422258645502,
+      "merged"
+     ],
+     [
+      0.020096396392186647,
+      "merged"
+     ],
+     [
+      0.03095958831218534,
+      "merged"
+     ],
+     [
+      0.0021784810396485174,
+      "merged"
+     ],
+     [
+      0.0006221635931164103,
+      "merged"
+     ],
+     [
+      0.0008708405357849458,
+      "merged"
+     ],
+     [
+      1.138804223799791e-05,
+      "merged"
+     ],
+     [
+      0.09589670591371613,
+      "merged"
+     ],
+     [
+      1.0536671223890308e-05,
+      "merged"
+     ],
+     [
+      0.3944978523980953,
+      "merged"
+     ],
+     [
+      0.7947685448723494,
+      "merged"
+     ],
+     [
+      5.410231420665785e-06,
+      "merged"
+     ],
+     [
+      0.0006062737009699757,
+      "merged"
+     ],
+     [
+      4.387697965737973e-06,
+      "merged"
+     ],
+     [
+      2.1727837586316816e-05,
+      "merged"
+     ],
+     [
+      0.00046947282953365663,
+      "merged"
+     ],
+     [
+      4.169063248816346e-05,
+      "merged"
+     ],
+     [
+      0.9736240066646717,
+      "merged"
+     ],
+     [
+      4.020223132417352e-05,
+      "merged"
+     ],
+     [
+      0.00023805245404930685,
+      "merged"
+     ],
+     [
+      7.186537983769556e-05,
+      "merged"
+     ]
+    ],
+    "flags": {
+     "risky": 46,
+     "ai_slop": 19,
+     "needs_tests": 30
+    },
+    "spam_types": {
+     "low-effort": 14,
+     "contributor-gaming": 1,
+     "ai-slop": 2
+    },
+    "escalated": 0.1782178217821782,
+    "latency": {
+     "bins": [
+      0,
+      0,
+      16,
+      28,
+      29,
+      28
+     ],
+     "labels": [
+      "<50",
+      "50-100",
+      "100-150",
+      "150-200",
+      "200-300",
+      "300+"
+     ],
+     "median": 214.5,
+     "p95": 430.6
+    }
+   },
+   "repo_table": [
+    {
+     "repo": "juice-shop/juice-shop",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.3333333333333333,
+     "review": 0.6666666666666666,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "cloudflare/cloudflare-docs",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.3333333333333333,
+     "review": 0.5,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "scrapy/scrapy",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.5,
+     "top_flag": "ai_slop"
+    },
+    {
+     "repo": "godotengine/godot",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.16666666666666666,
+     "review": 0.8333333333333334,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "DIYgod/RSSHub",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "topjohnwu/Magisk",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": "ai_slop"
+    },
+    {
+     "repo": "scrapinghub/dateparser",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.6666666666666666,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "flathub/flathub",
+     "n": 5,
+     "labelled_spam": 0.6,
+     "called_spam": 0.2,
+     "review": 0.4,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "brentmc79/juice-shop",
+     "n": 5,
+     "labelled_spam": 0.6,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "ezio143/juice-shop",
+     "n": 5,
+     "labelled_spam": 0.6,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "Pzqqt/android_kernel_xiaomi_marble",
+     "n": 5,
+     "labelled_spam": 0.6,
+     "called_spam": 0.6,
+     "review": 0.4,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "scikit-learn/scikit-learn",
+     "n": 4,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "Zyphorix9X/Building-and-Securing-a-DevSecOps-Pipeline-JuiceShop",
+     "n": 3,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "IamRitz/juice-shop-devsecops",
+     "n": 3,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "samber/awesome-olap",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": null
+    },
+    {
+     "repo": "fgibelin/juice-shop",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.0,
+     "top_flag": null
+    },
+    {
+     "repo": "Sulaimanzy/juice-shop-5esgi-al",
+     "n": 2,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "MoodyFem/owasp_juice-shop",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "Zahid29-arch/juice-shop",
+     "n": 2,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "ai_slop"
+    },
+    {
+     "repo": "Clivern/Glitch",
+     "n": 2,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "BeeStation/BeeStation-Hornet",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "OpsiMate/OpsiMate",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.5,
+     "top_flag": null
+    },
+    {
+     "repo": "NextCommunity/NextCommunity.github.io",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "pasan2002/IE3142-juice-shop",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "argotorg/solidity",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "RafaelBatistaMenegassi/juice-shop-secure-ci-cd",
+     "n": 2,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "termux/termux-packages",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "jsoehner/juice-shop",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "CarrosK/juice-shop",
+     "n": 1,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    }
+   ],
+   "monthly": {
+    "months": [
+     "2025-02",
+     "2025-07",
+     "2025-11",
+     "2025-12",
+     "2026-02",
+     "2026-09",
+     "2026-10"
+    ],
+    "spam": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     8,
+     52
+    ],
+    "merged": [
+     1,
+     1,
+     1,
+     1,
+     2,
+     3,
+     32
+    ]
+   }
+  },
+  "heldout": {
+   "n": 74,
+   "spam": 40,
+   "repos": 23,
+   "contenders": {
+    "SlopGate \u00b7 OpenJev": {
+     "name": "SlopGate \u00b7 OpenJev",
+     "kind": "System One",
+     "judged": 74,
+     "total": 74,
+     "precision": 0.9,
+     "recall": 0.225,
+     "fpr": 0.029411764705882353,
+     "waved": 0.025,
+     "median": 1.1139415420038858,
+     "median_model": 0.3145,
+     "tokens": 1979.3108108108108,
+     "auc": 0.8058823529411765,
+     "p95": 1.958193750004284,
+     "false_alarms": "1 / 34",
+     "cm": [
+      [
+       9,
+       24,
+       6,
+       1
+      ],
+      [
+       1,
+       25,
+       1,
+       7
+      ]
+     ]
+    },
+    "SlopGate \u00b7 Clef-flash": {
+     "name": "SlopGate \u00b7 Clef-flash",
+     "kind": "System One",
+     "judged": 74,
+     "total": 74,
+     "precision": 0.8,
+     "recall": 0.1,
+     "fpr": 0.029411764705882353,
+     "waved": 0.3,
+     "median": 0.8988094585074577,
+     "median_model": 0.13445000000000001,
+     "tokens": 2496.3783783783783,
+     "auc": 0.8352941176470589,
+     "p95": 1.587212417012779,
+     "false_alarms": "1 / 34",
+     "cm": [
+      [
+       4,
+       21,
+       3,
+       12
+      ],
+      [
+       1,
+       9,
+       0,
+       24
+      ]
+     ]
+    },
+    "DiffusionGemma 26B as chat": {
+     "name": "DiffusionGemma 26B as chat",
+     "kind": "Chat LLM",
+     "judged": 73,
+     "total": 74,
+     "precision": 1.0,
+     "recall": 0.2564102564102564,
+     "fpr": 0.0,
+     "waved": 0.23076923076923078,
+     "median": 1.1592597080161795,
+     "median_model": 0.387,
+     "tokens": 1740.4931506849316,
+     "auc": 0.798265460030166,
+     "p95": 1.6156128750008065,
+     "false_alarms": "0 / 34",
+     "cm": [
+      [
+       10,
+       11,
+       9,
+       9
+      ],
+      [
+       0,
+       10,
+       4,
+       20
+      ]
+     ]
+    },
+    "CodeRabbit": {
+     "name": "CodeRabbit",
+     "kind": "Observed",
+     "judged": 58,
+     "total": 74,
+     "precision": 1.0,
+     "recall": 0.034482758620689655,
+     "fpr": 0.0,
+     "waved": null,
+     "median": 75.5,
+     "median_model": null,
+     "tokens": null,
+     "auc": null,
+     "p95": 2343.0,
+     "false_alarms": "0 / 29",
+     "cm": [
+      [
+       1,
+       28,
+       0,
+       0
+      ],
+      [
+       0,
+       29,
+       0,
+       0
+      ]
+     ]
+    },
+    "anti-slop (34 rules)": {
+     "name": "anti-slop (34 rules)",
+     "kind": "Rules",
+     "judged": 52,
+     "total": 74,
+     "precision": 0.7916666666666666,
+     "recall": 0.475,
+     "fpr": 0.4166666666666667,
+     "waved": 0.525,
+     "median": 3.848412395484047,
+     "median_model": null,
+     "tokens": null,
+     "auc": null,
+     "p95": 7.108908875001362,
+     "false_alarms": "5 / 12",
+     "cm": [
+      [
+       19,
+       0,
+       0,
+       21
+      ],
+      [
+       5,
+       0,
+       0,
+       7
+      ]
+     ]
+    }
+   },
+   "openjev": {
+    "verdicts": {
+     "needs_review": 49,
+     "spam": 10,
+     "needs_changes": 7,
+     "fast_track": 8
+    },
+    "hist": [
+     {
+      "spam": 18,
+      "merged": 29
+     },
+     {
+      "spam": 1,
+      "merged": 2
+     },
+     {
+      "spam": 2,
+      "merged": 0
+     },
+     {
+      "spam": 2,
+      "merged": 0
+     },
+     {
+      "spam": 0,
+      "merged": 0
+     },
+     {
+      "spam": 1,
+      "merged": 0
+     },
+     {
+      "spam": 3,
+      "merged": 2
+     },
+     {
+      "spam": 1,
+      "merged": 0
+     },
+     {
+      "spam": 2,
+      "merged": 0
+     },
+     {
+      "spam": 10,
+      "merged": 1
+     }
+    ],
+    "calibration": [
+     {
+      "bin": 0,
+      "predicted": 0.008415938705593247,
+      "observed": 0.3829787234042553,
+      "n": 47
+     },
+     {
+      "bin": 1,
+      "predicted": 0.1475719828030837,
+      "observed": 0.3333333333333333,
+      "n": 3
+     },
+     {
+      "bin": 2,
+      "predicted": 0.24733997335601213,
+      "observed": 1.0,
+      "n": 2
+     },
+     {
+      "bin": 3,
+      "predicted": 0.3630034210880224,
+      "observed": 1.0,
+      "n": 2
+     },
+     {
+      "bin": 5,
+      "predicted": 0.5448679947766766,
+      "observed": 1.0,
+      "n": 1
+     },
+     {
+      "bin": 6,
+      "predicted": 0.6359380909232755,
+      "observed": 0.6,
+      "n": 5
+     },
+     {
+      "bin": 7,
+      "predicted": 0.7414641122990945,
+      "observed": 1.0,
+      "n": 1
+     },
+     {
+      "bin": 8,
+      "predicted": 0.8689775669832209,
+      "observed": 1.0,
+      "n": 2
+     },
+     {
+      "bin": 9,
+      "predicted": 0.9783238424440303,
+      "observed": 0.9090909090909091,
+      "n": 11
+     }
+    ],
+    "ece": 0.3088920759999769,
+    "points": [
+     [
+      0.33548980977916265,
+      "spam"
+     ],
+     [
+      0.16023289399086335,
+      "spam"
+     ],
+     [
+      0.6796597201779159,
+      "spam"
+     ],
+     [
+      0.9748028426539881,
+      "spam"
+     ],
+     [
+      0.5448679947766766,
+      "spam"
+     ],
+     [
+      0.957560401068366,
+      "spam"
+     ],
+     [
+      0.041249310616533676,
+      "spam"
+     ],
+     [
+      0.9970984410159541,
+      "spam"
+     ],
+     [
+      0.9811936151105496,
+      "spam"
+     ],
+     [
+      0.99999981531501,
+      "spam"
+     ],
+     [
+      0.9991976420394693,
+      "spam"
+     ],
+     [
+      0.9419347289190068,
+      "spam"
+     ],
+     [
+      0.9431596328569343,
+      "spam"
+     ],
+     [
+      0.08948706320578984,
+      "spam"
+     ],
+     [
+      0.001225839847936091,
+      "spam"
+     ],
+     [
+      0.6384612325114779,
+      "spam"
+     ],
+     [
+      0.2605763944467638,
+      "spam"
+     ],
+     [
+      0.23410355226526047,
+      "spam"
+     ],
+     [
+      0.0017465536578424785,
+      "spam"
+     ],
+     [
+      4.952744599214994e-05,
+      "spam"
+     ],
+     [
+      0.00298175176553703,
+      "spam"
+     ],
+     [
+      0.39051703239688224,
+      "spam"
+     ],
+     [
+      0.0034335823547487314,
+      "spam"
+     ],
+     [
+      3.7568497114726896e-05,
+      "spam"
+     ],
+     [
+      0.019377504978479818,
+      "spam"
+     ],
+     [
+      0.7414641122990945,
+      "spam"
+     ],
+     [
+      0.967267617850501,
+      "spam"
+     ],
+     [
+      0.09499839393687182,
+      "spam"
+     ],
+     [
+      0.00022232020362808163,
+      "spam"
+     ],
+     [
+      3.7011390139608345e-05,
+      "spam"
+     ],
+     [
+      0.07073816175254342,
+      "spam"
+     ],
+     [
+      0.009757777838429025,
+      "spam"
+     ],
+     [
+      0.0025543593880394877,
+      "spam"
+     ],
+     [
+      0.8796289024774455,
+      "spam"
+     ],
+     [
+      0.619934605573785,
+      "spam"
+     ],
+     [
+      0.00020230694220064742,
+      "spam"
+     ],
+     [
+      0.9999101418250435,
+      "spam"
+     ],
+     [
+      0.029989085041444437,
+      "spam"
+     ],
+     [
+      0.00010733036297164031,
+      "spam"
+     ],
+     [
+      0.8583262314889962,
+      "spam"
+     ],
+     [
+      0.0005010885047965031,
+      "merged"
+     ],
+     [
+      3.917230376085598e-06,
+      "merged"
+     ],
+     [
+      0.0006687833732584691,
+      "merged"
+     ],
+     [
+      3.9101247661537136e-05,
+      "merged"
+     ],
+     [
+      0.0020162503082881886,
+      "merged"
+     ],
+     [
+      0.0002016667966606577,
+      "merged"
+     ],
+     [
+      8.506484216743118e-05,
+      "merged"
+     ],
+     [
+      9.600136004551256e-05,
+      "merged"
+     ],
+     [
+      1.991451720190503e-05,
+      "merged"
+     ],
+     [
+      0.000527035421261794,
+      "merged"
+     ],
+     [
+      0.0004182203386134282,
+      "merged"
+     ],
+     [
+      0.9994373882295099,
+      "merged"
+     ],
+     [
+      0.0001281280088769541,
+      "merged"
+     ],
+     [
+      0.0020424205776769936,
+      "merged"
+     ],
+     [
+      0.00033747503319644055,
+      "merged"
+     ],
+     [
+      0.13081888687935633,
+      "merged"
+     ],
+     [
+      0.00032183213776682223,
+      "merged"
+     ],
+     [
+      0.002988617944908061,
+      "merged"
+     ],
+     [
+      0.15166416753903142,
+      "merged"
+     ],
+     [
+      0.001623671055767367,
+      "merged"
+     ],
+     [
+      0.001203059915929889,
+      "merged"
+     ],
+     [
+      0.0012347159412871532,
+      "merged"
+     ],
+     [
+      0.0007653752349037833,
+      "merged"
+     ],
+     [
+      0.004192077062807288,
+      "merged"
+     ],
+     [
+      3.259011881261894e-05,
+      "merged"
+     ],
+     [
+      3.469762249738586e-05,
+      "merged"
+     ],
+     [
+      7.926359765165511e-05,
+      "merged"
+     ],
+     [
+      0.0006596890928098295,
+      "merged"
+     ],
+     [
+      0.0003331675274814017,
+      "merged"
+     ],
+     [
+      0.006761235786736641,
+      "merged"
+     ],
+     [
+      0.6309661062762542,
+      "merged"
+     ],
+     [
+      3.3932739810156915e-05,
+      "merged"
+     ],
+     [
+      4.67659738791938e-06,
+      "merged"
+     ],
+     [
+      0.6106687900769446,
+      "merged"
+     ]
+    ],
+    "flags": {
+     "risky": 23,
+     "needs_tests": 32,
+     "ai_slop": 14,
+     "injection": 1
+    },
+    "spam_types": {
+     "not-spam": 1,
+     "contributor-gaming": 3,
+     "low-effort": 4,
+     "ai-slop": 2
+    },
+    "escalated": 0.1891891891891892,
+    "latency": {
+     "bins": [
+      0,
+      1,
+      0,
+      5,
+      28,
+      40
+     ],
+     "labels": [
+      "<50",
+      "50-100",
+      "100-150",
+      "150-200",
+      "200-300",
+      "300+"
+     ],
+     "median": 314.5,
+     "p95": 442.9
+    }
+   },
+   "repo_table": [
+    {
+     "repo": "OpsiMate/OpsiMate",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.16666666666666666,
+     "review": 0.5,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "YASHK-arch/Triage-Sandbox",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "S3DFX-CYBER/FindMyGSoC",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.8333333333333334,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "RustPython/RustPython",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.16666666666666666,
+     "review": 0.6666666666666666,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "AOSSIE-Org/Resonate-Website",
+     "n": 6,
+     "labelled_spam": 0.5,
+     "called_spam": 0.3333333333333333,
+     "review": 0.5,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "HarjjotSinghh/helicon",
+     "n": 4,
+     "labelled_spam": 0.5,
+     "called_spam": 0.25,
+     "review": 0.5,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "YASHK-arch/RepoOwl-extension",
+     "n": 4,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "ai_slop"
+    },
+    {
+     "repo": "Shaurya1907/PYSCHECARE-main",
+     "n": 4,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.25,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "Pcmhacker-piro/EaseMotion-css",
+     "n": 4,
+     "labelled_spam": 0.75,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "AOSSIE-Org/Resonate",
+     "n": 4,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "MonaaEid/hiero-sdk-python",
+     "n": 3,
+     "labelled_spam": 0.6666666666666666,
+     "called_spam": 0.3333333333333333,
+     "review": 0.6666666666666666,
+     "top_flag": null
+    },
+    {
+     "repo": "PRODHOSH/ossfolio",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "Redot-Engine/redot-engine",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "meshtastic/firmware",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "GetBindu/Bindu",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "xchacha20-poly1305/husi",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "CircuitVerse/CircuitVerse",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 0.5,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "damus-io/damus",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "pocketpy/pocketpy",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": null
+    },
+    {
+     "repo": "avelino/awesome-go",
+     "n": 2,
+     "labelled_spam": 0.5,
+     "called_spam": 0.5,
+     "review": 0.5,
+     "top_flag": "needs_tests"
+    },
+    {
+     "repo": "MMintzer/juice-shop",
+     "n": 1,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "ai_slop"
+    },
+    {
+     "repo": "Nareshkumawat-star/EaseMotion-css",
+     "n": 1,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    },
+    {
+     "repo": "socra-org/juice-shop",
+     "n": 1,
+     "labelled_spam": 1.0,
+     "called_spam": 0.0,
+     "review": 1.0,
+     "top_flag": "risky"
+    }
+   ],
+   "monthly": {
+    "months": [
+     "2025-10",
+     "2025-12",
+     "2026-01",
+     "2026-04",
+     "2026-05",
+     "2026-06",
+     "2026-07",
+     "2026-08",
+     "2026-09",
+     "2026-10"
+    ],
+    "spam": [
+     1,
+     5,
+     4,
+     1,
+     6,
+     8,
+     4,
+     6,
+     4,
+     1
+    ],
+    "merged": [
+     0,
+     1,
+     2,
+     0,
+     0,
+     1,
+     3,
+     12,
+     5,
+     10
+    ]
+   }
+  }
+ },
+ "history": [
+  {
+   "version": "v1",
+   "recall": 0.21666666666666667,
+   "precision": 0.8666666666666667,
+   "fpr": 0.04878048780487805
+  },
+  {
+   "version": "v2",
+   "recall": 0.25,
+   "precision": 0.8333333333333334,
+   "fpr": 0.07317073170731707
+  },
+  {
+   "version": "v3",
+   "recall": 0.2833333333333333,
+   "precision": 1.0,
+   "fpr": 0.0
+  }
+ ],
+ "swarm": [
+  {
+   "number": 8307,
+   "author": "Yuren0312",
+   "title": "fix(robotstxt): deliver parsed parser to all concurrent waiters",
+   "created_at": "2026-10-11 04:06:24+00:00"
+  },
+  {
+   "number": 8308,
+   "author": "zhaoruizhe81",
+   "title": "Fix robots.txt enforcement for concurrent requests to the same host",
+   "created_at": "2026-10-11 06:19:20+00:00"
+  },
+  {
+   "number": 8309,
+   "author": "Adarsh-mk7",
+   "title": "Fix fail-open robots.txt enforcement for concurrent requests to same host",
+   "created_at": "2026-10-12 06:26:03+00:00"
+  }
+ ]
+}

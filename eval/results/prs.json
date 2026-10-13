@@ -54,6 +54,19 @@
       "median": 402.0,
       "median_model": null,
       "tokens": null
+    },
+    {
+      "name": "anti-slop (34 rules)",
+      "kind": "Rules",
+      "judged": 29,
+      "total": 34,
+      "precision": 0.9523809523809523,
+      "recall": 0.7142857142857143,
+      "fpr": 1.0,
+      "waved": 0.2857142857142857,
+      "median": 3.886918040981982,
+      "median_model": null,
+      "tokens": null
     }
   ]
 }

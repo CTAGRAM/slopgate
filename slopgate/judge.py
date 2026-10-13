@@ -107,6 +107,18 @@ def unfilled_template(pr: PullRequest) -> bool:
     return bool(template) and (body == template or (body and difflib.SequenceMatcher(None, body, template).ratio() > 0.95))
 
 
+def fact_values(pr: PullRequest) -> dict:
+    """The same facts as numbers, for the dashboard."""
+    return {
+        "age_days": pr.account_age_days, "prs_24h": pr.prs_in_prior_24h,
+        "additions": sum(f.get("additions", 0) for f in pr.files),
+        "deletions": sum(f.get("deletions", 0) for f in pr.files), "files": len(pr.files),
+        "swarm": swarm_size(pr), "unfilled_template": unfilled_template(pr),
+        "linked_issue": pr.linked_issue["number"] if pr.linked_issue else None,
+        "association": pr.author_association,
+    }
+
+
 def facts(pr: PullRequest) -> list[str]:
     adds = sum(f.get("additions", 0) for f in pr.files)
     dels = sum(f.get("deletions", 0) for f in pr.files)

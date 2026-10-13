@@ -33,6 +33,7 @@ class Opinion:
     detail: str = ""
     error: str | None = None
     model_seconds: float | None = None  # the model's own time, when the server reports it
+    extra: dict | None = None  # System One: every question's probability, the rule notes, escalation
 
 
 Contender = Callable[[PullRequest, str], Opinion]
@@ -50,7 +51,10 @@ def system_one(settings: Settings, model_id: str, name: str) -> Contender:
         flags += f", type: {t.spam_type.replace('_', '-')}" if t.spam_type else ""
         return Opinion(name, "System One", t.verdict, t.probabilities["spam"], seconds,
                        r.input_tokens, f"{t.confidence:.0%} confident{flags}",
-                       model_seconds=r.server_ms / 1000 if r.server_ms else None)
+                       model_seconds=r.server_ms / 1000 if r.server_ms else None,
+                       extra={"probabilities": t.probabilities, "confidence": t.confidence, "notes": t.notes,
+                              "uncertain": t.uncertain, "flags": t.flags, "spam_type": t.spam_type,
+                              "area": t.area, "questions": len(r.answers)})
     run.label, run.kind_hint = name, "System One"
     return run
 

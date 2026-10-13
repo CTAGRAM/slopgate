@@ -34,7 +34,8 @@ class SlopGate:
 def summary(pr: PullRequest, t: Triage) -> dict:
     r = t.reading
     return {
-        "url": pr.url, "verdict": t.verdict, "spam_type": t.spam_type, "confidence": round(t.confidence, 3),
+        "url": pr.url, "repo": f"{pr.owner}/{pr.repo}", "number": pr.number, "title": pr.title, "author": pr.author,
+        "verdict": t.verdict, "spam_type": t.spam_type, "confidence": round(t.confidence, 3),
         "uncertain": t.uncertain, "flags": t.flags, "area": t.area,
         "probabilities": {k: round(v, 3) for k, v in t.probabilities.items()},
         "effort": round(t.effort, 2), "notes": t.notes, "second_opinion": t.second_opinion,
