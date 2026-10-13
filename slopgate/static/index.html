@@ -668,7 +668,6 @@ function termLines(o, pr) {
     L.push({text:'✓ '+label+(x.spam_type ? ' ('+x.spam_type.replace(/_/g,'-')+')' : '')+' · '+Math.round((x.confidence||0)*100)+'% confident',c:g});
   } else if (o.kind === 'Read + rules') {
     const x = o.extra || {}, r = x.rules;
-    L.push({text:'$ slopgate: the read + anti-slop’s rules, in parallel',c:w});
     L.push({text:r ? '· rules: '+r.failed+'/'+r.total+' checks failed' : '· rules: unavailable',c:m});
     if (r && r.checks && r.checks.length) L.push({text:'  '+r.checks.map(c=>c.name).join(', '),c:t});
     L.push({text:'· read: '+(x.read_verdict ? V[VKEY[x.read_verdict]].label : '—')+' · author '+(x.trusted ? 'trusted' : 'not trusted'),c:m});
